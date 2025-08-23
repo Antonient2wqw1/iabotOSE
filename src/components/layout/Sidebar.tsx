@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { 
-  MessageSquare, 
-  Plus, 
-  Settings, 
+import {
+  MessageSquare,
+  Plus,
+  Settings,
   Menu,
   History,
   Trash2,
-  Edit3
+  Edit3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,24 +35,34 @@ export function Sidebar({ className }: SidebarProps) {
   const [sessions] = useState<ChatSession[]>(mockSessions);
 
   return (
-    <div className={cn(
-      "glass border-r flex flex-col h-full smooth transition-all duration-300",
-      isCollapsed ? "w-16" : "w-80",
-      className
-    )}>
+    <div
+      className={cn(
+        "glass border-r flex flex-col h-full smooth transition-all duration-300",
+        isCollapsed ? "w-16" : "w-80",
+        className
+      )}
+    >
       {/* Header */}
       <div className="p-4 border-b border-border/50">
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center glow">
-                <MessageSquare className="w-4 h-4 text-white" />
-              </div>
+          {/* Logo + título */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo-ose-ia.png"
+              alt="AI Chat"
+              className={cn(
+                "object-contain glow",
+                isCollapsed ? "h-8 w-8 rounded-lg" : "h-7 w-7 rounded-md"
+              )}
+            />
+            {!isCollapsed && (
               <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 AI Chat
               </h1>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Botón de colapsar/expandir */}
           <Button
             variant="ghost"
             size="icon"
@@ -67,7 +76,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* New Chat Button */}
       <div className="p-4">
-        <Button 
+        <Button
           className={cn(
             "w-full justify-start gap-3 bg-gradient-primary hover:opacity-90 glow",
             isCollapsed && "px-2"
@@ -80,14 +89,14 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Chat History */}
       {!isCollapsed && (
-        <>
+        <div className="flex-1 flex flex-col">
           <div className="px-4 py-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <History className="w-4 h-4" />
               <span>Historial</span>
             </div>
           </div>
-          
+
           <ScrollArea className="flex-1 px-2">
             <div className="space-y-1">
               {sessions.map((session) => (
@@ -95,8 +104,8 @@ export function Sidebar({ className }: SidebarProps) {
                   key={session.id}
                   className={cn(
                     "group flex items-center gap-3 p-3 rounded-lg smooth cursor-pointer",
-                    session.isActive 
-                      ? "bg-accent border border-primary/20" 
+                    session.isActive
+                      ? "bg-accent border border-primary/20"
                       : "hover:bg-accent/50"
                   )}
                 >
@@ -113,7 +122,11 @@ export function Sidebar({ className }: SidebarProps) {
                     <Button size="icon" variant="ghost" className="w-6 h-6">
                       <Edit3 className="w-3 h-3" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="w-6 h-6 hover:text-destructive">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-6 h-6 hover:text-destructive"
+                    >
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
@@ -121,13 +134,13 @@ export function Sidebar({ className }: SidebarProps) {
               ))}
             </div>
           </ScrollArea>
-        </>
+        </div>
       )}
 
       {/* Settings */}
       <div className="p-4 border-t border-border/50">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className={cn(
             "w-full justify-start gap-3 text-muted-foreground hover:text-foreground",
             isCollapsed && "px-2"

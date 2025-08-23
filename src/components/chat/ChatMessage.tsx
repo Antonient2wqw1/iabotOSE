@@ -16,47 +16,49 @@ export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   return (
-    <div className={cn(
-      "flex gap-4 p-6 smooth",
-      isUser ? "bg-chat-user/5" : "bg-chat-assistant"
-    )}>
+    <div
+      className={cn(
+        "flex gap-4 p-6 smooth",
+        isUser ? "bg-transparent" : "bg-transparent"
+      )}
+    >
       {/* Avatar */}
-      <Avatar className={cn(
-        "w-8 h-8 flex-shrink-0",
-        isUser ? "order-2" : "order-1"
-      )}>
-        <AvatarImage src={isUser ? undefined : "/ai-avatar.png"} />
-        <AvatarFallback className={cn(
-          isUser 
-            ? "bg-gradient-primary text-white" 
-            : "bg-muted text-muted-foreground"
-        )}>
+      <Avatar
+        className={cn("w-8 h-8 flex-shrink-0", isUser ? "order-2" : "order-1")}
+      >
+        <AvatarImage src={isUser ? undefined : "/logo-ose-ia.png"} />
+        <AvatarFallback
+          className={cn(
+            isUser ? "bg-gradient-primary text-white" : "bg-muted text-muted-foreground"
+          )}
+        >
           {isUser ? "TU" : "IA"}
         </AvatarFallback>
       </Avatar>
 
       {/* Message Content */}
-      <div className={cn(
-        "flex-1 space-y-3",
-        isUser ? "order-1" : "order-2"
-      )}>
-        <div className={cn(
-          "prose prose-sm max-w-none",
-          isUser ? "text-right" : "text-left"
-        )}>
-          <div className={cn(
-            "inline-block p-4 rounded-xl max-w-[85%]",
-            isUser 
-              ? "bg-gradient-primary text-white ml-auto" 
-              : "bg-card border border-border/50 text-foreground"
-          )}>
+      <div className={cn("flex-1 space-y-3", isUser ? "order-1" : "order-2")}>
+        <div
+          className={cn(
+            "prose prose-sm max-w-none",
+            isUser ? "text-right" : "text-left"
+          )}
+        >
+          <div
+            className={cn(
+              "inline-block p-4 rounded-xl max-w-[85%] backdrop-blur-md",
+              isUser
+                ? "bg-primary/20 border border-primary/30 text-white ml-auto"
+                : "bg-white/10 border border-white/20 text-foreground"
+            )}
+          >
             <p className="m-0 leading-relaxed whitespace-pre-wrap">
               {message.content}
             </p>
           </div>
         </div>
 
-        {/* Message Actions */}
+        {/* Message Actions (solo IA) */}
         {!isUser && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{message.timestamp}</span>

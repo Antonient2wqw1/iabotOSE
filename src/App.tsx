@@ -40,3 +40,7 @@
 .read-the-docs {
   color: #888;
 }
+
+export default function App() {
+  return <div className="p-6">App lista ✅</div>;
+}

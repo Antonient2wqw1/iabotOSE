@@ -1,5 +1,19 @@
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+import IndexPage from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+
+const router = createBrowserRouter([
+  { path: "/", element: <IndexPage /> },
+  { path: "*", element: <NotFound /> },
+]);
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <RouterProvider router={router} />
+  </StrictMode>
+);

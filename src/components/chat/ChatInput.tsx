@@ -10,66 +10,53 @@ interface ChatInputProps {
   isGenerating?: boolean;
 }
 
-/** 🔧 Config — Frases que rotan y tiempo (ms) */
 const HINTS = [
-  "Hola soy OSE Assitant :)",
-  "¿Puedo ayudarte en algo?",
-  "Estoy aquí para ayudarte...",
-  "Puedes pedirme lo que quieras...",
-  "Estoy listo para ayudarte :)",
+  "Estoy aquí para ayudarte…",
+  "¿Qué construimos hoy?",
+  "Pregúntame lo que quieras…",
+  "Hola, soy OSE Assistant :)",
 ];
-const TYPE_SPEED = 50; // velocidad de escritura
-const ERASE_SPEED = 20; // velocidad de borrado
-const WAIT_BEFORE_ERASE = 500; // espera antes de borrar
+const TYPE_SPEED = 50;
+const ERASE_SPEED = 20;
+const WAIT_BEFORE_ERASE = 500;
 
 export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Estado del "typewriter"
   const [displayText, setDisplayText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const charIndex = useRef(0);
 
-  // efecto typewriter
   useEffect(() => {
     if (message.trim().length > 0) {
-      setDisplayText(""); // si usuario escribe, ocultamos sugerencia
+      setDisplayText("");
       return;
     }
-
     const currentHint = HINTS[hintIndex];
     let timeout: NodeJS.Timeout;
 
     if (!isDeleting && charIndex.current < currentHint.length) {
-      // escribir letras
       timeout = setTimeout(() => {
         setDisplayText(currentHint.slice(0, charIndex.current + 1));
         charIndex.current++;
       }, TYPE_SPEED);
     } else if (!isDeleting && charIndex.current === currentHint.length) {
-      // esperar antes de borrar
-      timeout = setTimeout(() => {
-        setIsDeleting(true);
-      }, WAIT_BEFORE_ERASE);
+      timeout = setTimeout(() => setIsDeleting(true), WAIT_BEFORE_ERASE);
     } else if (isDeleting && charIndex.current > 0) {
-      // borrar letras
       timeout = setTimeout(() => {
         setDisplayText(currentHint.slice(0, charIndex.current - 1));
         charIndex.current--;
       }, ERASE_SPEED);
     } else if (isDeleting && charIndex.current === 0) {
-      // pasar a la siguiente frase
       setIsDeleting(false);
       setHintIndex((prev) => (prev + 1) % HINTS.length);
     }
-
     return () => clearTimeout(timeout);
   }, [displayText, isDeleting, hintIndex, message]);
 
-  // Auto-resize del textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -93,46 +80,51 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
   };
 
   return (
-    <div className="glass border-t border-border/50 p-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Input Area */}
-        <div className="relative">
-          <div className="flex items-end gap-3 glass rounded-xl p-3 border border-border/50">
-            {/* Attachment Button */}
+    <div className="px-4 pb-6 pt-2">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {/* caja flotante centrada y estrecha */}
+        <div className="relative max-w-3xl mx-auto">
+          <div
+            className={cn(
+              "flex items-end gap-3 rounded-2xl p-2 border",
+              "bg-black/5 backdrop-blur-sm border-black/10",
+              "shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+            )}
+            style={{ WebkitBackdropFilter: "blur(6px)" }}
+          >
+            {/* Adjuntos */}
             <Button
               type="button"
               size="icon"
               variant="ghost"
-              className="w-8 h-8 flex-shrink-0 hover:bg-accent"
+              className="w-8 h-8 flex-shrink-0 hover:bg-black/10"
             >
               <Paperclip className="w-4 h-4" />
             </Button>
 
-            {/* Input con overlay dinámico */}
+            {/* Textarea + hint */}
             <div className="relative flex-1">
               <Textarea
                 ref={textareaRef}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="" // usamos overlay
+                placeholder=""
                 disabled={disabled}
                 className={cn(
                   "flex-1 min-h-[20px] max-h-[200px] resize-none border-0 bg-transparent",
                   "focus-visible:ring-0 focus-visible:ring-offset-0 p-0",
-                  "placeholder:text-muted-foreground"
+                  "text-slate-900 placeholder:text-slate-400"
                 )}
                 rows={1}
                 aria-label="Escribe tu mensaje"
               />
-
-              {/* Overlay animado */}
               {message.trim().length === 0 && displayText && (
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "pointer-events-none absolute left-0 top-1/2 -translate-y-1/2", // 👈 centrado vertical, alineado izquierda
-                    "text-muted-foreground/90 select-none"
+                    "pointer-events-none absolute left-0 top-1/2 -translate-y-1/2",
+                    "text-slate-400 select-none"
                   )}
                 >
                   {displayText}
@@ -140,14 +132,14 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
               )}
             </div>
 
-            {/* Voice/Send Button */}
+            {/* Voice / Send */}
             <div className="flex gap-2 flex-shrink-0">
               {message.trim() ? (
                 <Button
                   type="submit"
                   size="icon"
                   disabled={disabled || !message.trim()}
-                  className="w-8 h-8 bg-gradient-primary hover:opacity-90 glow"
+                  className="w-8 h-8 bg-gradient-primary hover:opacity-90 shadow"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -158,43 +150,26 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
                   variant="ghost"
                   onClick={() => setIsRecording(!isRecording)}
                   className={cn(
-                    "w-8 h-8",
-                    isRecording &&
-                      "bg-destructive hover:bg-destructive text-destructive-foreground"
+                    "w-8 h-8 hover:bg-black/10",
+                    isRecording && "bg-destructive text-destructive-foreground"
                   )}
                 >
-                  {isRecording ? (
-                    <Square className="w-4 h-4" />
-                  ) : (
-                    <Mic className="w-4 h-4" />
-                  )}
+                  {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                 </Button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Status */}
-        {isGenerating && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-100" />
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200" />
-            </div>
-            <span>La IA está escribiendo...</span>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        {/* Footer (mismo ancho que el input) */}
+        <div className="max-w-3xl mx-auto flex items-center justify-between text-xs text-slate-400">
           <span>
             Presiona{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
               Enter
             </kbd>{" "}
             para enviar,{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
               Shift + Enter
             </kbd>{" "}
             para nueva línea

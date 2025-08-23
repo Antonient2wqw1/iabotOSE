@@ -16,14 +16,8 @@ interface ChatContainerProps {
   className?: string;
 }
 
-const mockMessages: Message[] = [
-  { id: "1", content: "Hola, soy tu asistente de IA. ¿En qué puedo ayudarte hoy?", role: "assistant", timestamp: "09:00" },
-  { id: "2", content: "¿Podrías explicarme qué son los React hooks y cuáles son los más importantes?", role: "user", timestamp: "09:01" },
-  { id: "3", content: "¡Por supuesto! ...", role: "assistant", timestamp: "09:02" }
-];
-
 export function ChatContainer({ className }: ChatContainerProps) {
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -32,78 +26,86 @@ export function ChatContainer({ className }: ChatContainerProps) {
       id: Date.now().toString(),
       content,
       role: "user",
-      timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+      timestamp: new Date().toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setIsGenerating(true);
 
-    // Simulación de respuesta de IA
+    // Simulación de respuesta
     setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "Esta es una respuesta simulada de la IA. En una implementación real, aquí se conectaría con tu modelo de IA.",
+        content:
+          "Esta es una respuesta simulada de la IA. En una implementación real, aquí se conectaría con tu modelo.",
         role: "assistant",
-        timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+        timestamp: new Date().toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsGenerating(false); // activa el fade-out suave por CSS
-    }, 2000);
+      setMessages((prev) => [...prev, assistantMessage]);
+      setIsGenerating(false);
+    }, 1600);
   };
 
   const clearChat = () => setMessages([]);
   const regenerateLastResponse = () => {
     if (messages.length > 0 && messages[messages.length - 1].role === "assistant") {
-      setMessages(prev => prev.slice(0, -1));
+      setMessages((prev) => prev.slice(0, -1));
       setIsGenerating(true);
       setTimeout(() => {
         const newResponse: Message = {
           id: Date.now().toString(),
-          content: "Esta es una nueva respuesta regenerada. ...",
+          content: "Esta es una nueva respuesta regenerada...",
           role: "assistant",
-          timestamp: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+          timestamp: new Date().toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         };
-        setMessages(prev => [...prev, newResponse]);
+        setMessages((prev) => [...prev, newResponse]);
         setIsGenerating(false);
-      }, 2000);
+      }, 1400);
     }
   };
 
   // Auto-scroll al fondo
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const sc = scrollAreaRef.current.querySelector("[data-radix-scroll-area-viewport]");
+      const sc = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
       if (sc) (sc as HTMLElement).scrollTop = (sc as HTMLElement).scrollHeight;
     }
   }, [messages]);
 
   return (
-    <div className={`relative flex flex-col h-full min-h-0 overflow-hidden ${className || ""}`}>
-      {/* 🌌 AURORA CSS-ONLY (anti-banding). Se activa con isGenerating */}
-      <div className={`aurora-css ${isGenerating ? "is-active" : ""}`}>
-        <div className="aurora-css__layer aurora-css__layer--a" />
-        <div className="aurora-css__layer aurora-css__layer--b" />
-        <div className="aurora-css__layer aurora-css__layer--c" />
-        <div className="aurora-css__grain" />
-        <div className="aurora-css__film" />
-        <div className="aurora-css__vignette" />
-      </div>
-
-      {/* Header */}
-      <div className="relative z-10 glass border-b border-border/50 p-4">
+    <div
+      className={`relative flex flex-col h-full min-h-0 overflow-hidden bg-white text-slate-900 ${className || ""}`}
+    >
+      {/* Header sin barra (transparente sobre fondo blanco) */}
+      <div className="relative z-10 px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Conversación con IA</h2>
-            <p className="text-sm text-muted-foreground">
+          <div className="flex-1" />
+          <div className="text-center">
+            <h2 className="text-sm font-semibold opacity-90">Conversación con IA</h2>
+            <p className="text-xs text-muted-foreground">
               {messages.length > 0 ? `${messages.length} mensajes` : "Nueva conversación"}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex-1 flex items-center justify-end gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={regenerateLastResponse}
-              disabled={messages.length === 0 || messages[messages.length - 1].role !== "assistant"}
-              className="hover:bg-accent"
+              disabled={
+                messages.length === 0 ||
+                messages[messages.length - 1].role !== "assistant"
+              }
+              className="hover:bg-black/5"
               aria-label="Regenerar última respuesta"
             >
               <RotateCcw className="w-4 h-4" />
@@ -113,7 +115,7 @@ export function ChatContainer({ className }: ChatContainerProps) {
               size="icon"
               onClick={clearChat}
               disabled={messages.length === 0}
-              className="hover:bg-accent hover:text-destructive"
+              className="hover:bg-black/5"
               aria-label="Limpiar chat"
             >
               <Trash2 className="w-4 h-4" />
@@ -122,32 +124,63 @@ export function ChatContainer({ className }: ChatContainerProps) {
         </div>
       </div>
 
-      {/* Mensajes */}
+      {/* Overlay “Pensando” — cuadrado, más pequeño y un poco arriba */}
+      {isGenerating && (
+        <div className="thinking-overlay">
+          <div className="thinking-card animate-think-in">
+            <div className="thinking-aurora">
+              <div className="blob a" />
+              <div className="blob b" />
+              <div className="blob c" />
+            </div>
+            <div className="relative z-10 h-full w-full flex flex-col items-center justify-center text-center">
+              <span className="text-sm font-semibold text-neutral-800">Pensando…</span>
+              <div className="mt-2 flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-[#9297DB] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[#D8AADB] animate-pulse delay-150" />
+                <span className="w-2 h-2 rounded-full bg-[#CCC9DC] animate-pulse delay-300" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mensajes / Hero */}
       <div className="relative z-10 flex-1 min-h-0">
         <ScrollArea ref={scrollAreaRef} className="h-full">
           <div className="space-y-0">
             {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full p-12">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto glow">
-                    <span className="text-2xl">🤖</span>
+              <div className="relative h-[calc(100vh-240px)] flex items-center justify-center px-6">
+                <div className="relative max-w-2xl text-center">
+                  <div className="inline-flex items-center justify-center mb-6">
+                    <img
+                      src="/logo-ose-ia.png"
+                      alt="OSE IA"
+                      className="h-12 w-12 rounded-xl mr-3 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+                    />
+                    <span className="text-sm text-slate-500 tracking-wider">
+                      OSE · AI Assistant
+                    </span>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">¡Hola! Soy tu asistente de IA</h3>
-                    <p className="text-muted-foreground max-w-md">
-                      Estoy aquí para ayudarte con cualquier pregunta o tarea. ¿En qué puedo asistirte hoy?
-                    </p>
-                  </div>
+                  <h1 className="text-4xl md:text-5xl font-extrabold leading-tight bg-gradient-to-r from-[#9297DB] via-[#D8AADB] to-[#CCC9DC] bg-clip-text text-transparent">
+                    El futuro de la asistencia&nbsp;IA
+                  </h1>
+                  <p className="mt-4 text-base md:text-lg text-slate-500">
+                    Bienvenido a OSE IA. Tu conocimiento al alcance de un chat
+                    claro, rápido y confiable.
+                  </p>
                 </div>
               </div>
             ) : (
-              messages.map((message) => <ChatMessage key={message.id} message={message} />)
+              messages.map((message) => (
+                <ChatMessage key={message.id} message={message} />
+              ))
             )}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Input */}
+      {/* Input flotante, centrado y con márgenes laterales más pequeños */}
       <div className="relative z-10">
         <ChatInput
           onSendMessage={handleSendMessage}

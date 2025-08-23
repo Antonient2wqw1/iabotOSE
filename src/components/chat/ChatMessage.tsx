@@ -1,84 +1,70 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ChatMessageProps {
-  message: {
-    id: string;
-    content: string;
-    role: "user" | "assistant";
-    timestamp: string;
-  };
-}
+type Message = {
+  id: string;
+  content: string;
+  role: "user" | "assistant";
+  timestamp: string;
+};
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message }: { message: Message }) {
   const isUser = message.role === "user";
+
+  // Hace que la animación salga desde el lado correcto (derecha user, izquierda IA)
+  const origin = isUser ? "100% 0" : "0% 0";
 
   return (
     <div
-      className={cn(
-        "flex gap-4 p-6 smooth",
-        isUser ? "bg-transparent" : "bg-transparent"
-      )}
+      className={cn("msg-in flex w-full mb-4", isUser ? "justify-end" : "justify-start")}
+      style={{ ["--msg-origin" as any]: origin }}
     >
-      {/* Avatar */}
-      <Avatar
-        className={cn("w-8 h-8 flex-shrink-0", isUser ? "order-2" : "order-1")}
-      >
-        <AvatarImage src={isUser ? undefined : "/logo-ose-ia.png"} />
-        <AvatarFallback
-          className={cn(
-            isUser ? "bg-gradient-primary text-white" : "bg-muted text-muted-foreground"
-          )}
-        >
-          {isUser ? "TU" : "IA"}
-        </AvatarFallback>
-      </Avatar>
+      {/* Avatar IA */}
+      {!isUser && (
+        <div className="mr-2 mt-1 shrink-0">
+          <img
+            src="/logo-ose-ia.png"
+            alt="OSE IA"
+            className="h-8 w-8 rounded-lg shadow-md"
+          />
+        </div>
+      )}
 
-      {/* Message Content */}
-      <div className={cn("flex-1 space-y-3", isUser ? "order-1" : "order-2")}>
-        <div
-          className={cn(
-            "prose prose-sm max-w-none",
-            isUser ? "text-right" : "text-left"
-          )}
-        >
-          <div
-            className={cn(
-              "inline-block p-4 rounded-xl max-w-[85%] backdrop-blur-md",
-              isUser
-                ? "bg-primary/20 border border-primary/30 text-white ml-auto"
-                : "bg-white/10 border border-white/20 text-foreground"
-            )}
-          >
-            <p className="m-0 leading-relaxed whitespace-pre-wrap">
-              {message.content}
-            </p>
-          </div>
+      {/* Burbuja */}
+      <div
+        className={cn(
+          "relative px-4 py-3 max-w-[78%] rounded-2xl bubble",
+          "transition-transform duration-300",
+          isUser
+            ? "bg-white border border-slate-200 text-slate-900 rounded-br-md"
+            : "bg-gradient-to-br from-white to-slate-50 border border-teal-100 text-slate-900 rounded-bl-md"
+        )}
+      >
+        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words selection:bg-slate-200">
+          {message.content}
         </div>
 
-        {/* Message Actions (solo IA) */}
-        {!isUser && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{message.timestamp}</span>
-            <div className="flex gap-1 ml-auto">
-              <Button size="icon" variant="ghost" className="w-6 h-6 hover:text-foreground">
-                <Copy className="w-3 h-3" />
-              </Button>
-              <Button size="icon" variant="ghost" className="w-6 h-6 hover:text-green-500">
-                <ThumbsUp className="w-3 h-3" />
-              </Button>
-              <Button size="icon" variant="ghost" className="w-6 h-6 hover:text-red-500">
-                <ThumbsDown className="w-3 h-3" />
-              </Button>
-              <Button size="icon" variant="ghost" className="w-6 h-6 hover:text-foreground">
-                <RotateCcw className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Hora */}
+        <div
+          className={cn(
+            "absolute -bottom-5 text-[11px] tracking-wide",
+            isUser ? "right-1 text-slate-400" : "left-1 text-slate-400"
+          )}
+        >
+          {message.timestamp}
+        </div>
+
+        {/* Sheen sutil al montar */}
+        <span className="bubble-sheen" />
       </div>
+
+      {/* Avatar USER */}
+      {isUser && (
+        <div className="ml-2 mt-1 shrink-0">
+          <div className="h-8 w-8 rounded-lg bg-slate-900 text-white grid place-items-center text-[11px] font-semibold">
+            TU
+          </div>
+        </div>
+      )}
     </div>
   );
 }

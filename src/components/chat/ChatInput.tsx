@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, Square } from "lucide-react";
+import { Send, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
-  disabled?: boolean;
+  disabled?: boolean;       // suele venir de isGenerating
   isGenerating?: boolean;
 }
 
@@ -19,10 +19,9 @@ const TYPE_SPEED = 50, ERASE_SPEED = 22, WAIT_BEFORE_ERASE = 700;
 
 export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputProps) {
   const [message, setMessage] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // typewriter
+  // --- Typewriter del placeholder ---
   const [displayText, setDisplayText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -43,7 +42,7 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
     return () => clearTimeout(id);
   }, [displayText, isDeleting, hintIndex, message]);
 
-  // autoresize
+  // --- Auto-resize ---
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -51,12 +50,28 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
     }
   }, [message]);
 
+  // --- Enfocar SIEMPRE el textarea cuando ya no esté deshabilitado ---
+  useEffect(() => {
+    if (!disabled) {
+      // pequeño delay para asegurar que el DOM ya pintó el estado nuevo
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }, [disabled]);
+
+  // Autofocus al montar
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !disabled) {
-      onSendMessage(message.trim());
-      setMessage("");
-    }
+    const text = message.trim();
+    if (!text || disabled) return;
+    onSendMessage(text);
+    setMessage("");
+
+    // Deja el cursor listo inmediatamente (si no está deshabilitado)
+    requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -65,18 +80,18 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
 
   return (
     <div className="chat-input-wrap">
-      {/* compacta: menos padding y sin altura mínima grande */}
       <form onSubmit={handleSubmit} className="chat-input px-4 py-2">
         <div className="flex items-center gap-3">
-          {/* adjuntar (ícono gris) */}
+          {/* Adjuntar (gris) */}
           <Button type="button" size="icon" variant="ghost" className="w-8 h-8 icon-ghost">
             <Paperclip className="w-4 h-4" />
           </Button>
 
-          {/* textarea compacto */}
+          {/* Textarea */}
           <div className="relative flex-1">
             <Textarea
               ref={textareaRef}
+              autoFocus
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -86,7 +101,6 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
               className={cn(
                 "w-full border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 resize-none",
                 "text-[14px] leading-[1.2] text-slate-900 placeholder:text-slate-400",
-                // ↓ anulamos la min-height de shadcn y damos alto base pequeño
                 "min-h-0 h-[22px]"
               )}
               style={{ minHeight: 0, maxHeight: 120 }}
@@ -102,22 +116,23 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
             )}
           </div>
 
-          {/* mic / enviar */}
-          {message.trim() ? (
-            <Button type="submit" size="icon" className="w-8 h-8 bg-slate-900 text-white hover:opacity-90">
-              <Send className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={() => setIsRecording(!isRecording)}
-              className={cn("w-8 h-8", isRecording && "bg-red-500 text-white")}
-            >
-              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </Button>
-          )}
+          {/* Botón ENVIAR (esfera) — evita que robe el foco con onMouseDown */}
+          <Button
+            type="submit"
+            size="icon"
+            disabled={disabled || !message.trim()}
+            aria-label="Enviar mensaje"
+            onMouseDown={(e) => e.preventDefault()}   // <- mantiene el foco en el textarea
+            className={cn(
+              "relative w-9 h-9 p-0 rounded-full bg-transparent hover:bg-transparent focus-visible:ring-0",
+              "disabled:opacity-60 disabled:cursor-not-allowed"
+            )}
+          >
+            <span className="send-sphere" aria-hidden="true">
+              <span className="send-core"></span>
+            </span>
+            <Send className="relative z-10 w-4 h-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,.35)]" />
+          </Button>
         </div>
       </form>
 

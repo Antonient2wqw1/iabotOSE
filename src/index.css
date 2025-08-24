@@ -23,7 +23,7 @@
   @apply text-slate-400 text-[11px] mt-0.5;
 }
 
-/* ===== Fade superior para que los primeros mensajes no queden pegados ===== */
+/* ===== Fade superior ===== */
 .top-fade {
   position: fixed;
   top: 48px;
@@ -34,7 +34,7 @@
   z-index: 5;
 }
 
-/* ===== Burbujas (la versión previa) ===== */
+/* ===== Burbujas ===== */
 .bubble {
   position: relative;
   box-shadow:
@@ -51,7 +51,7 @@
   0% { opacity:0; transform: translateY(6px) scale(.98); filter: blur(1px); }
   100%{ opacity:1; transform:none; filter: blur(0); }
 }
-/* Sheen suave al montar (la de siempre) */
+/* Sheen suave */
 .bubble .bubble-sheen {
   content:"";
   position:absolute; inset:0; pointer-events:none;
@@ -62,19 +62,49 @@
 }
 @keyframes sheen { to { transform: translateX(120%); opacity:0; } }
 
-/* ===== Overlay “Pensando…” (cuadro cuadrado) con aurora D8AADB/9297DB/CCC9DC ===== */
+/* ===== Overlay “Pensando…” (cuadro cuadrado) ===== */
 .thinking-overlay{
   position: fixed; inset: 0; z-index: 40;
   display:flex; justify-content:center; align-items:flex-start;
   padding-top: clamp(36px, 10vh, 110px);
   pointer-events:none;
+
+  /* 🔒 Desvanecido suave para que el halo NO llegue a la cabecera */
+  --halo-fade-start: 120px;
+  --halo-fade-end: calc(var(--halo-fade-start) + 110px);
+
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0,
+    rgba(0,0,0,0) var(--halo-fade-start),
+    rgba(0,0,0,0.25) calc(var(--halo-fade-start) + 24px),
+    rgba(0,0,0,0.6)  calc(var(--halo-fade-start) + 64px),
+    rgba(0,0,0,1)    var(--halo-fade-end),
+    rgba(0,0,0,1)    100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0,
+    rgba(0,0,0,0) var(--halo-fade-start),
+    rgba(0,0,0,0.25) calc(var(--halo-fade-start) + 24px),
+    rgba(0,0,0,0.6)  calc(var(--halo-fade-start) + 64px),
+    rgba(0,0,0,1)    var(--halo-fade-end),
+    rgba(0,0,0,1)    100%
+  );
 }
+@media (max-width: 640px){
+  .thinking-overlay{
+    --halo-fade-start: 136px;
+    --halo-fade-end: calc(var(--halo-fade-start) + 110px);
+  }
+}
+
 .thinking-card{
-  --think-size: min(260px, 80vw);
+  --think-size: clamp(170px, 22vw, 210px);
   position: relative;
   width: var(--think-size);
   height: var(--think-size);
-  padding: 18px;
+  padding: 14px;
   border-radius: 24px;
   background: rgba(255,255,255,.96);
   -webkit-backdrop-filter: blur(14px);
@@ -84,7 +114,83 @@
     0 34px 80px -28px rgba(146,151,219,0.42),
     0 10px 24px -12px rgba(2,6,23,0.20);
   animation: think-pop 260ms cubic-bezier(.22,.61,.36,1) both;
+  overflow: visible;
+  z-index: 1;
 }
+
+/* 🔥 Contorno degradado ANIMADO alrededor del cuadro */
+.thinking-card::before{
+  content:"";
+  position:absolute;
+  inset:-78px;
+  border-radius: 40px;
+  pointer-events:none;
+  z-index:-1;
+
+  -webkit-backdrop-filter: blur(8px) saturate(1.05);
+  backdrop-filter: blur(8px) saturate(1.05);
+
+  background:
+    radial-gradient(60% 60% at 30% 30%, rgba(71,200,255,.55), transparent 70%),
+    radial-gradient(60% 60% at 70% 30%, rgba(146,151,219,.50), transparent 70%),
+    radial-gradient(70% 70% at 50% 80%, rgba(244,155,237,.45), transparent 75%),
+    radial-gradient(60% 60% at 20% 80%, rgba(208,242,243,.35), transparent 70%),
+    conic-gradient(from 0deg,
+      rgba(71,200,255,.35),
+      rgba(146,141,244,.35),
+      rgba(244,155,237,.35),
+      rgba(71,200,255,.35));
+  background-size: 160% 160%, 160% 160%, 200% 200%, 200% 200%, 300% 300%;
+  background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%, 50% 50%;
+  mix-blend-mode: screen;
+  opacity:.9;
+  filter: blur(38px) saturate(1.8);
+
+  will-change: transform, background-position, filter;
+  animation:
+    halo-osc 6.5s ease-in-out infinite alternate,
+    halo-pan 8s cubic-bezier(.4,0,.2,1) infinite alternate,
+    swirl-rotate 18s linear infinite;
+}
+
+/* segunda capa más suave para profundidad */
+.thinking-card::after{
+  content:"";
+  position:absolute;
+  inset:-96px;
+  border-radius: 56px;
+  z-index:-2;
+  background:
+    radial-gradient(70% 70% at 75% 20%, rgba(49,102,234,.22), transparent 70%),
+    radial-gradient(60% 60% at 20% 85%, rgba(244,155,237,.20), transparent 70%);
+  filter: blur(54px) saturate(1.4);
+  mix-blend-mode: screen;
+  opacity:.55;
+  will-change: transform, background-position, filter;
+  animation:
+    halo-pulse 5.4s ease-in-out infinite,
+    halo-pan2 10s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes halo-osc {
+  0%   { transform: translate(-6px, -4px) scale(1.00); }
+  50%  { transform: translate( 8px,  6px) scale(1.04); }
+  100% { transform: translate(-4px,  8px) scale(1.02); }
+}
+@keyframes halo-pan {
+  0%   { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%, 50% 50%; }
+  50%  { background-position: 100% 50%, 0% 50%, 50% 100%, 0% 0%, 60% 40%; }
+  100% { background-position: 0% 20%, 100% 80%, 40% 100%, 20% 0%, 40% 60%; }
+}
+@keyframes halo-pan2 {
+  0%   { background-position: 80% 30%, 20% 70%; }
+  100% { background-position: 20% 70%, 80% 30%; }
+}
+@keyframes halo-pulse {
+  0%,100% { transform: scale(1);   opacity:.55; }
+  50%     { transform: scale(1.04); opacity:.70; }
+}
+
 @keyframes think-pop{
   0% { opacity:0; transform: translateY(8px) scale(.96); filter: blur(2px); }
   100%{ opacity:1; transform:none; filter: blur(0); }
@@ -92,6 +198,7 @@
 .thinking-title{ @apply text-sm font-semibold text-slate-700 text-center select-none; }
 .thinking-sub  { @apply text-[11px] text-slate-500 text-center select-none mt-1; }
 
+/* Auroras internas del cuadro (se mantienen) */
 .thinking-aurora{
   position:absolute; inset:-18%;
   filter: blur(90px) saturate(2.2) contrast(1.2) brightness(1.08);
@@ -131,12 +238,13 @@
   @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-4xl px-4;
 }
 .chat-input{
-  @apply w-full bg-white/95 backdrop-blur border border-slate-200 rounded-2xl shadow-md px-3 py-2;
+  /* antes: rounded-2xl */
+  @apply w-full bg-white/95 backdrop-blur border border-slate-200 rounded-[28px] sm:rounded-[32px] shadow-md px-3 py-2;
 }
 .chat-input textarea{
   @apply text-slate-900 placeholder:text-slate-400 leading-[1.4];
 }
-.icon-ghost { @apply text-slate-400; }  /* ícono adjuntar en gris */
+.icon-ghost { @apply text-slate-400; }
 
 /* Aviso centrado bajo el input */
 .input-disclaimer{
@@ -145,12 +253,12 @@
 
 /* Accesibilidad */
 @media (prefers-reduced-motion: reduce){
-  .msg-in, .thinking-card, .thinking-aurora::after, .thinking-aurora .blob { animation:none!important; }
+  .msg-in, .thinking-card, .thinking-card::before, .thinking-card::after,
+  .thinking-aurora::after, .thinking-aurora .blob { animation:none!important; }
 }
 
-/* ====== Bienvenida estilo poster (multilínea + degradado) ====== */
+/* ====== Bienvenida estilo poster ====== */
 .welcome-poster{
-  /* Paleta exacta */
   background-image: linear-gradient(
     95deg,
     #E0B89F 0%,
@@ -170,16 +278,14 @@
   background-clip: text;
   color: transparent;
 
-  /* Composición de poster */
   display: inline-block;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: .92;         /* compacto, como el ejemplo */
-  white-space: pre-line;    /* respeta \n en el texto */
+  line-height: .92;
+  white-space: pre-line;
   background-size: 180% 180%;
   animation: poster-pan 10s ease-in-out infinite alternate;
 
-  /* Pop/legibilidad sobre fondo claro */
   text-shadow:
     0 0 1px rgba(255,255,255,.35),
     0 10px 30px rgba(94,46,244,.16);
@@ -187,11 +293,180 @@
     drop-shadow(0 8px 22px rgba(233,134,188,.18))
     drop-shadow(0 3px 8px rgba(0,0,0,.04));
 }
-
-/* Tallas responsivas para el poster */
 .welcome-poster{ font-size: clamp(42px, 8vw, 96px); }
-
 @keyframes poster-pan{
   0%   { background-position: 0% 50%; }
   100% { background-position: 100% 50%; }
 }
+
+/* ===== Avatar IA — esfera multicolor sin blend (anti-borde) ===== */
+.avatar-sphere{
+  width: 2rem; /* 32px */
+  height: 2rem;
+  position: relative;
+  border-radius: 9999px;
+  overflow: hidden;
+  clip-path: circle(calc(50% - 0.6px) at 50% 50%);
+  background: transparent;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  z-index: 3; /* sobre la burbuja para que parezca “morderla” */
+  box-shadow:
+    0 3px 10px rgba(94,46,244,.18),
+    inset 0 0 2px rgba(255,255,255,.5);
+}
+
+/* Capas internas… (sin cambios) */
+.avatar-sphere .avatar-core,
+.avatar-sphere .avatar-core::before,
+.avatar-sphere .avatar-core::after{
+  content:"";
+  position:absolute;
+  width: 260%;
+  height: 260%;
+  left: -80%;
+  top:  -80%;
+  border-radius: 50%;
+  pointer-events:none;
+  filter: blur(14px) saturate(1.55) contrast(1.12) brightness(1.05);
+  will-change: transform;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  opacity: .95;
+}
+.avatar-sphere .avatar-core{
+  background:
+    radial-gradient(closest-side at 48% 46%, #B55FDE, transparent 62%),
+    radial-gradient(closest-side at 30% 72%, #5E2EF4, transparent 65%),
+    radial-gradient(closest-side at 74% 32%, #EA6987, transparent 62%),
+    radial-gradient(closest-side at 66% 78%, #85B4E2, transparent 70%);
+  animation: mix-pan-core 8.2s infinite;
+}
+.avatar-sphere .avatar-core::before{
+  background:
+    radial-gradient(closest-side at 36% 42%, #F6AEBC, transparent 60%),
+    radial-gradient(closest-side at 58% 30%, #D967C9, transparent 60%);
+  animation: mix-pan-a 9.8s infinite;
+}
+.avatar-sphere .avatar-core::after{
+  background:
+    radial-gradient(closest-side at 56% 66%, #729EDD, transparent 60%),
+    radial-gradient(closest-side at 42% 60%, #E0B89F, transparent 60%);
+  animation: mix-pan-b 11.2s infinite;
+}
+.avatar-sphere::after{
+  content:"";
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:
+    radial-gradient(140% 120% at 28% 20%, rgba(255,255,255,.35), rgba(255,255,255,0) 55%),
+    radial-gradient(120% 120% at 75% 85%, rgba(0,0,0,.10), rgba(0,0,0,0) 60%);
+  box-shadow: inset 0 0 8px rgba(0,0,0,.06);
+}
+@keyframes mix-pan-core{
+  0%   { transform: translate(-12%, -8%)  scale(1.03) }
+  28%  { transform: translate(  8%, -5%)  scale(1.00) }
+  55%  { transform: translate( 12%, 11%)  scale(1.05) }
+  82%  { transform: translate( -9%, 13%)  scale(1.02) }
+  100% { transform: translate(-12%, -8%)  scale(1.03) }
+}
+@keyframes mix-pan-a{
+  0%   { transform: translate(14%, -14%) scale(1.02) }
+  33%  { transform: translate(-9%,   9%) scale(1.06) }
+  66%  { transform: translate(12%,   3%) scale(1.01) }
+  100% { transform: translate(14%, -14%) scale(1.02) }
+}
+@keyframes mix-pan-b{
+  0%   { transform: translate(-8%, 16%) scale(1.03) }
+  33%  { transform: translate(10%, -10%) scale(1.07) }
+  66%  { transform: translate(-14%, 6%) scale(1.02) }
+  100% { transform: translate(-8%, 16%) scale(1.03) }
+}
+
+/* ===== Botón ENVIAR — esfera animada, CLIPPEADA dentro del botón ===== */
+.send-sphere{
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
+  background: transparent;
+  box-shadow:
+    inset 0 0 2px rgba(255,255,255,.35),
+    0 2px 8px rgba(17,24,39,.10);
+}
+.send-sphere .send-core{
+  position: absolute;
+  width: 220%;
+  height: 220%;
+  left: -60%;
+  top:  -60%;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side at 35% 35%, #F0CDEE, transparent 62%),
+    radial-gradient(closest-side at 72% 36%, #EA94AF, transparent 62%),
+    radial-gradient(closest-side at 64% 76%, #FBAE56, transparent 63%),
+    radial-gradient(closest-side at 28% 72%, #9441B3, transparent 60%),
+    radial-gradient(closest-side at 54% 58%, #6D204E, transparent 60%),
+    radial-gradient(closest-side at 68% 60%, #F9B995, transparent 60%),
+    radial-gradient(closest-side at 42% 62%, #E6522A, transparent 60%),
+    radial-gradient(closest-side at 58% 40%, #F5E1C6, transparent 60%);
+  filter: blur(12px) saturate(1.45) contrast(1.04) brightness(1.04);
+  will-change: transform;
+  animation: send-mix 7.6s ease-in-out infinite alternate;
+  transform: translateZ(0);
+}
+.send-sphere::after{
+  content:"";
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:
+    radial-gradient(120% 110% at 28% 20%, rgba(255,255,255,.45), rgba(255,255,255,0) 58%),
+    radial-gradient(110% 110% at 78% 82%, rgba(0,0,0,.10), rgba(0,0,0,0) 60%);
+}
+@keyframes send-mix{
+  0%   { transform: translate(-10%, -8%) scale(1.03); }
+  50%  { transform: translate( 12%,  10%) scale(1.05); }
+  100% { transform: translate(-14%,   6%) scale(1.02); }
+}
+
+/* ===== Override: Burbujas estilo "pill" con notch desactivado ===== */
+.bubble{
+  border-radius: 9999px !important;        /* pastilla total */
+  padding: 14px 18px;                      /* un poco más cómoda */
+}
+
+/* IA: pill clara (sin notch visible) */
+.bubble-ai{
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid #e5e7eb !important;
+  border-radius:9999px !important;
+  z-index:1;
+  box-shadow:
+    0 10px 28px rgba(15,23,42,.08),
+    0 4px 10px rgba(15,23,42,.06);
+}
+/* 🔴 eliminamos el notch para que no aparezca la “segunda esfera” */
+.bubble-ai::before{
+  content:none !important;
+  display:none !important;
+}
+
+/* Usuario: pill oscura sin notch */
+.bubble-user{
+  background:#111827 !important;
+  color:#ffffff !important;
+  border:0 !important;
+  border-radius:9999px !important;
+  box-shadow:
+    0 12px 30px rgba(15,23,42,.20),
+    0 4px 12px rgba(15,23,42,.10);
+}
+.bubble-user::before{ content:none !important; }
+
+/* El brillo "sheen" sólo en la burbuja clara */
+.bubble-user .bubble-sheen{ display:none; }
+.bubble-ai   .bubble-sheen{ display:block; }
+
+/* Respiro para el timestamp */
+.msg-in .bubble{ margin-bottom: 10px; }

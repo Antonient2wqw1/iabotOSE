@@ -2,191 +2,161 @@ import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
-import { Button } from "@/components/ui/button";
-import { RotateCcw, Trash2 } from "lucide-react";
 
-interface Message {
+type Message = {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: string;
-}
+};
 
-interface ChatContainerProps {
-  className?: string;
-}
-
-export function ChatContainer({ className }: ChatContainerProps) {
+export function ChatContainer({ className = "" }: { className?: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = async (content: string) => {
+  /** Altura REAL del input flotante para reservar espacio */
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerH, setFooterH] = useState<number>(120);
+
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+
+    // Valor inicial
+    setFooterH(el.getBoundingClientRect().height);
+
+    // Observar cambios de tamaño
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver((entries) => {
+        const box = entries[0]?.contentRect;
+        if (box) setFooterH(box.height);
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+  }, []);
+
+  const handleSendMessage = (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
       role: "user",
-      timestamp: new Date().toLocaleTimeString("es-ES", {
+      timestamp: new Date().toLocaleTimeString("es-PE", {
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((p) => [...p, userMessage]);
     setIsGenerating(true);
 
-    // Simulación de respuesta
     setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         content:
           "Esta es una respuesta simulada de la IA. En una implementación real, aquí se conectaría con tu modelo.",
         role: "assistant",
-        timestamp: new Date().toLocaleTimeString("es-ES", {
+        timestamp: new Date().toLocaleTimeString("es-PE", {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      setMessages((p) => [...p, assistantMessage]);
       setIsGenerating(false);
-    }, 1600);
+    }, 1300);
   };
 
-  const clearChat = () => setMessages([]);
-  const regenerateLastResponse = () => {
-    if (messages.length > 0 && messages[messages.length - 1].role === "assistant") {
-      setMessages((prev) => prev.slice(0, -1));
-      setIsGenerating(true);
-      setTimeout(() => {
-        const newResponse: Message = {
-          id: Date.now().toString(),
-          content: "Esta es una nueva respuesta regenerada...",
-          role: "assistant",
-          timestamp: new Date().toLocaleTimeString("es-ES", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
-        setMessages((prev) => [...prev, newResponse]);
-        setIsGenerating(false);
-      }, 1400);
-    }
-  };
-
-  // Auto-scroll al fondo
+  /** autoscroll (incluye footerH para que baje si el input crece) */
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const sc = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
-      if (sc) (sc as HTMLElement).scrollTop = (sc as HTMLElement).scrollHeight;
+    const vp = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    if (vp) vp.scrollTop = vp.scrollHeight;
+  }, [messages, isGenerating, footerH]);
+
+  /** Reserva de espacio al final del viewport (anti-cruce) */
+  const SAFE = 96; // ↑ margen de seguridad mayor para separar bien del input
+  const reserveH = Math.ceil(footerH + SAFE);
+
+  useEffect(() => {
+    const vp = scrollAreaRef.current?.querySelector(
+      "[data-radix-scroll-area-viewport]"
+    ) as HTMLElement | null;
+    if (vp) {
+      vp.style.paddingBottom = `${reserveH}px`;
     }
-  }, [messages]);
+  }, [reserveH]);
+
+  // padding top para que no se peguen arriba; si está pensando, un poco más
+  const topPadClass = isGenerating ? "pt-40" : "pt-28";
 
   return (
-    <div
-      className={`relative flex flex-col h-full min-h-0 overflow-hidden bg-white text-slate-900 ${className || ""}`}
-    >
-      {/* Header sin barra (transparente sobre fondo blanco) */}
-      <div className="relative z-10 px-4 pt-4 pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex-1" />
-          <div className="text-center">
-            <h2 className="text-sm font-semibold opacity-90">Conversación con IA</h2>
-            <p className="text-xs text-muted-foreground">
-              {messages.length > 0 ? `${messages.length} mensajes` : "Nueva conversación"}
-            </p>
-          </div>
-          <div className="flex-1 flex items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={regenerateLastResponse}
-              disabled={
-                messages.length === 0 ||
-                messages[messages.length - 1].role !== "assistant"
-              }
-              className="hover:bg-black/5"
-              aria-label="Regenerar última respuesta"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={clearChat}
-              disabled={messages.length === 0}
-              className="hover:bg-black/5"
-              aria-label="Limpiar chat"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+    <div className={`relative flex flex-col h-full min-h-0 ${className}`}>
+      {/* Header centrado */}
+      <div className="header-top">
+        <h2>Conversación con OSE AI</h2>
+        <p>{messages.length > 0 ? `${messages.length} mensajes` : "Nueva conversación"}</p>
       </div>
+      <div className="top-fade" />
 
-      {/* Overlay “Pensando” — cuadrado, más pequeño y un poco arriba */}
+      {/* Espaciador: reserva altura del header */}
+      <div aria-hidden className="h-24 md:h-28 shrink-0" />
+
+      {/* Overlay “Pensando…” */}
       {isGenerating && (
         <div className="thinking-overlay">
-          <div className="thinking-card animate-think-in">
+          <div className="thinking-card">
             <div className="thinking-aurora">
-              <div className="blob a" />
-              <div className="blob b" />
-              <div className="blob c" />
+              <div className="blob a"></div>
+              <div className="blob b"></div>
+              <div className="blob c"></div>
             </div>
-            <div className="relative z-10 h-full w-full flex flex-col items-center justify-center text-center">
-              <span className="text-sm font-semibold text-neutral-800">Pensando…</span>
-              <div className="mt-2 flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#9297DB] animate-pulse" />
-                <span className="w-2 h-2 rounded-full bg-[#D8AADB] animate-pulse delay-150" />
-                <span className="w-2 h-2 rounded-full bg-[#CCC9DC] animate-pulse delay-300" />
-              </div>
+            <div className="relative z-10 grid place-items-center h-full">
+              <div className="thinking-title">Pensando…</div>
+              <div className="thinking-sub">preparando la mejor respuesta</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Mensajes / Hero */}
-      <div className="relative z-10 flex-1 min-h-0">
+      {/* Hero cuando no hay mensajes */}
+      {messages.length === 0 && !isGenerating && (
+        <div className="pointer-events-none absolute inset-x-0 top-24 flex justify-center z-10">
+          <div className="w-full max-w-[980px] px-6">
+            <h1 className="welcome-poster text-left">
+              {"Hola\nSoy OSE AI\nme da gusto\nverte."}
+            </h1>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de mensajes */}
+      <div className="relative flex-1 min-h-0">
         <ScrollArea ref={scrollAreaRef} className="h-full">
-          <div className="space-y-0">
-            {messages.length === 0 ? (
-              <div className="relative h-[calc(100vh-240px)] flex items-center justify-center px-6">
-                <div className="relative max-w-2xl text-center">
-                  <div className="inline-flex items-center justify-center mb-6">
-                    <img
-                      src="/logo-ose-ia.png"
-                      alt="OSE IA"
-                      className="h-12 w-12 rounded-xl mr-3 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
-                    />
-                    <span className="text-sm text-slate-500 tracking-wider">
-                      OSE · AI Assistant
-                    </span>
-                  </div>
-                  <h1 className="text-4xl md:text-5xl font-extrabold leading-tight bg-gradient-to-r from-[#9297DB] via-[#D8AADB] to-[#CCC9DC] bg-clip-text text-transparent">
-                    El futuro de la asistencia&nbsp;IA
-                  </h1>
-                  <p className="mt-4 text-base md:text-lg text-slate-500">
-                    Bienvenido a OSE IA. Tu conocimiento al alcance de un chat
-                    claro, rápido y confiable.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))
-            )}
+          <div className={`mx-auto max-w-4xl ${topPadClass} space-y-6 px-4`}>
+            {messages.map((m) => (
+              <ChatMessage key={m.id} message={m} />
+            ))}
+            {/* Spacer físico extra bajo el último mensaje */}
+            <div aria-hidden style={{ height: reserveH }} />
           </div>
         </ScrollArea>
       </div>
 
-      {/* Input flotante, centrado y con márgenes laterales más pequeños */}
-      <div className="relative z-10">
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          disabled={isGenerating}
-          isGenerating={isGenerating}
-        />
+      {/* Input flotante CENTRADO (un poco más alto del borde inferior) */}
+      <div
+        ref={footerRef}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-full px-4"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto w-full max-w-4xl pointer-events-auto">
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            disabled={isGenerating}
+            isGenerating={isGenerating}
+          />
+        </div>
       </div>
     </div>
   );

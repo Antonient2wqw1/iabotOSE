@@ -12,51 +12,38 @@ interface ChatInputProps {
 
 const HINTS = [
   "Estoy aquí para ayudarte…",
-  "¿Qué construimos hoy?",
-  "Pregúntame lo que quieras…",
-  "Hola, soy OSE Assistant :)",
+  "Cuéntame qué necesitas",
+  "Describe tu idea o pega texto",
 ];
-const TYPE_SPEED = 50;
-const ERASE_SPEED = 20;
-const WAIT_BEFORE_ERASE = 500;
+const TYPE_SPEED = 50, ERASE_SPEED = 22, WAIT_BEFORE_ERASE = 700;
 
 export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // typewriter
   const [displayText, setDisplayText] = useState("");
   const [hintIndex, setHintIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const charIndex = useRef(0);
 
   useEffect(() => {
-    if (message.trim().length > 0) {
-      setDisplayText("");
-      return;
-    }
-    const currentHint = HINTS[hintIndex];
-    let timeout: NodeJS.Timeout;
-
-    if (!isDeleting && charIndex.current < currentHint.length) {
-      timeout = setTimeout(() => {
-        setDisplayText(currentHint.slice(0, charIndex.current + 1));
-        charIndex.current++;
-      }, TYPE_SPEED);
-    } else if (!isDeleting && charIndex.current === currentHint.length) {
-      timeout = setTimeout(() => setIsDeleting(true), WAIT_BEFORE_ERASE);
+    if (message.trim().length > 0) { setDisplayText(""); return; }
+    const t = HINTS[hintIndex]; let id: any;
+    if (!isDeleting && charIndex.current < t.length) {
+      id = setTimeout(() => setDisplayText(t.slice(0, ++charIndex.current)), TYPE_SPEED);
+    } else if (!isDeleting && charIndex.current === t.length) {
+      id = setTimeout(() => setIsDeleting(true), WAIT_BEFORE_ERASE);
     } else if (isDeleting && charIndex.current > 0) {
-      timeout = setTimeout(() => {
-        setDisplayText(currentHint.slice(0, charIndex.current - 1));
-        charIndex.current--;
-      }, ERASE_SPEED);
+      id = setTimeout(() => setDisplayText(t.slice(0, --charIndex.current)), ERASE_SPEED);
     } else if (isDeleting && charIndex.current === 0) {
-      setIsDeleting(false);
-      setHintIndex((prev) => (prev + 1) % HINTS.length);
+      setIsDeleting(false); setHintIndex((p) => (p + 1) % HINTS.length);
     }
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(id);
   }, [displayText, isDeleting, hintIndex, message]);
 
+  // autoresize
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -73,110 +60,70 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }
   };
 
   return (
-    <div className="px-4 pb-6 pt-2">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* caja flotante centrada y estrecha */}
-        <div className="relative max-w-3xl mx-auto">
-          <div
-            className={cn(
-              "flex items-end gap-3 rounded-2xl p-2 border",
-              "bg-black/5 backdrop-blur-sm border-black/10",
-              "shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+    <div className="chat-input-wrap">
+      {/* compacta: menos padding y sin altura mínima grande */}
+      <form onSubmit={handleSubmit} className="chat-input px-4 py-2">
+        <div className="flex items-center gap-3">
+          {/* adjuntar (ícono gris) */}
+          <Button type="button" size="icon" variant="ghost" className="w-8 h-8 icon-ghost">
+            <Paperclip className="w-4 h-4" />
+          </Button>
+
+          {/* textarea compacto */}
+          <div className="relative flex-1">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder=""
+              disabled={disabled}
+              rows={1}
+              className={cn(
+                "w-full border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 resize-none",
+                "text-[14px] leading-[1.2] text-slate-900 placeholder:text-slate-400",
+                // ↓ anulamos la min-height de shadcn y damos alto base pequeño
+                "min-h-0 h-[22px]"
+              )}
+              style={{ minHeight: 0, maxHeight: 120 }}
+              aria-label="Escribe tu mensaje"
+            />
+            {message.trim().length === 0 && displayText && (
+              <span
+                className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-slate-400/90 select-none"
+                aria-hidden="true"
+              >
+                {displayText}
+              </span>
             )}
-            style={{ WebkitBackdropFilter: "blur(6px)" }}
-          >
-            {/* Adjuntos */}
+          </div>
+
+          {/* mic / enviar */}
+          {message.trim() ? (
+            <Button type="submit" size="icon" className="w-8 h-8 bg-slate-900 text-white hover:opacity-90">
+              <Send className="w-4 h-4" />
+            </Button>
+          ) : (
             <Button
               type="button"
               size="icon"
               variant="ghost"
-              className="w-8 h-8 flex-shrink-0 hover:bg-black/10"
+              onClick={() => setIsRecording(!isRecording)}
+              className={cn("w-8 h-8", isRecording && "bg-red-500 text-white")}
             >
-              <Paperclip className="w-4 h-4" />
+              {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </Button>
-
-            {/* Textarea + hint */}
-            <div className="relative flex-1">
-              <Textarea
-                ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder=""
-                disabled={disabled}
-                className={cn(
-                  "flex-1 min-h-[20px] max-h-[200px] resize-none border-0 bg-transparent",
-                  "focus-visible:ring-0 focus-visible:ring-offset-0 p-0",
-                  "text-slate-900 placeholder:text-slate-400"
-                )}
-                rows={1}
-                aria-label="Escribe tu mensaje"
-              />
-              {message.trim().length === 0 && displayText && (
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "pointer-events-none absolute left-0 top-1/2 -translate-y-1/2",
-                    "text-slate-400 select-none"
-                  )}
-                >
-                  {displayText}
-                </span>
-              )}
-            </div>
-
-            {/* Voice / Send */}
-            <div className="flex gap-2 flex-shrink-0">
-              {message.trim() ? (
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={disabled || !message.trim()}
-                  className="w-8 h-8 bg-gradient-primary hover:opacity-90 shadow"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setIsRecording(!isRecording)}
-                  className={cn(
-                    "w-8 h-8 hover:bg-black/10",
-                    isRecording && "bg-destructive text-destructive-foreground"
-                  )}
-                >
-                  {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer (mismo ancho que el input) */}
-        <div className="max-w-3xl mx-auto flex items-center justify-between text-xs text-slate-400">
-          <span>
-            Presiona{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
-              Enter
-            </kbd>{" "}
-            para enviar,{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
-              Shift + Enter
-            </kbd>{" "}
-            para nueva línea
-          </span>
-          <span>{message.length}/4000</span>
+          )}
         </div>
       </form>
+
+      <div className="input-disclaimer">
+        OSE AI puede contener errores; por favor valida la información.
+      </div>
     </div>
   );
 }

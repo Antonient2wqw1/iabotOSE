@@ -1,12 +1,13 @@
 import { cn } from "@/lib/utils";
-import RichCard, { RichCardProps } from "./RichCard";
+import { Card, renderCard } from "@/components/cards/RichCards";
 
-export type Message = {
+
+type Message = {
   id: string;
-  content?: string;
+  content: string;
   role: "user" | "assistant";
   timestamp: string;
-  card?: RichCardProps; // si existe, se renderiza la tarjeta
+  cards?: Card[];            
 };
 
 export function ChatMessage({
@@ -17,11 +18,11 @@ export function ChatMessage({
   onReply?: (m: { id: string; content: string }) => void;
 }) {
   const isUser = message.role === "user";
-  const isCard = !!message.card;
 
   return (
     <div className={cn("msg-in flex w-full", isUser ? "justify-end" : "justify-start")}>
-      {!isUser && !isCard && (
+      {/* Avatar IA — esfera animada */}
+      {!isUser && (
         <div className="mr-2 mt-1 shrink-0">
           <div className="avatar-sphere" aria-hidden>
             <span className="avatar-core" />
@@ -29,8 +30,10 @@ export function ChatMessage({
         </div>
       )}
 
+      {/* Columna: burbuja + hora + chip + cards */}
       <div className={cn("flex flex-col flex-1 min-w-0", isUser ? "items-end" : "items-start")}>
-        {!isCard ? (
+        {/* Burbuja de texto (si hay) */}
+        {message.content && (
           <div
             className={cn(
               "relative bubble transition-transform duration-300",
@@ -43,12 +46,9 @@ export function ChatMessage({
             </div>
             <span className="bubble-sheen" />
           </div>
-        ) : (
-          <div className="inline-flex w-auto max-w-[86%] sm:max-w-[70%]">
-            <RichCard {...message.card!} />
-          </div>
         )}
 
+        {/* Hora */}
         <div
           className={cn(
             "mt-1 text-[11px] tracking-wide text-slate-400",
@@ -58,15 +58,25 @@ export function ChatMessage({
           {message.timestamp}
         </div>
 
-        {!isUser && !isCard && (
+        {/* Botón Responder (solo IA) */}
+        {!isUser && (
           <button
             type="button"
             className="reply-chip mt-1 ml-1"
-            onClick={() => onReply?.({ id: message.id, content: message.content || "" })}
+            onClick={() => onReply?.({ id: message.id, content: message.content })}
             aria-label="Responder a este mensaje"
           >
             ↩︎ Responder
           </button>
+        )}
+
+        {/* Cards ricas (solo si vienen) */}
+        {!isUser && message.cards && message.cards.length > 0 && (
+          <div className="mt-3 flex flex-col gap-3 w-full max-w-[760px]">
+            {message.cards.map((c, i) => (
+              <div key={i}>{renderCard(c)}</div>
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -62,177 +62,6 @@
 }
 @keyframes sheen { to { transform: translateX(120%); opacity:0; } }
 
-/* ===== Overlay “Pensando…” (cuadro cuadrado) ===== */
-.thinking-overlay{
-  position: fixed; inset: 0; z-index: 40;
-  display:flex; justify-content:center; align-items:flex-start;
-  padding-top: clamp(36px, 10vh, 110px);
-  pointer-events:none;
-
-  /* 🔒 Desvanecido suave para que el halo NO llegue a la cabecera */
-  --halo-fade-start: 120px;
-  --halo-fade-end: calc(var(--halo-fade-start) + 110px);
-
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0) 0,
-    rgba(0,0,0,0) var(--halo-fade-start),
-    rgba(0,0,0,0.25) calc(var(--halo-fade-start) + 24px),
-    rgba(0,0,0,0.6)  calc(var(--halo-fade-start) + 64px),
-    rgba(0,0,0,1)    var(--halo-fade-end),
-    rgba(0,0,0,1)    100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0) 0,
-    rgba(0,0,0,0) var(--halo-fade-start),
-    rgba(0,0,0,0.25) calc(var(--halo-fade-start) + 24px),
-    rgba(0,0,0,0.6)  calc(var(--halo-fade-start) + 64px),
-    rgba(0,0,0,1)    var(--halo-fade-end),
-    rgba(0,0,0,1)    100%
-  );
-}
-@media (max-width: 640px){
-  .thinking-overlay{
-    --halo-fade-start: 136px;
-    --halo-fade-end: calc(var(--halo-fade-start) + 110px);
-  }
-}
-
-.thinking-card{
-  --think-size: clamp(170px, 22vw, 210px);
-  position: relative;
-  width: var(--think-size);
-  height: var(--think-size);
-  padding: 14px;
-  border-radius: 24px;
-  background: rgba(255,255,255,.96);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(15,23,42,.06);
-  box-shadow:
-    0 34px 80px -28px rgba(146,151,219,0.42),
-    0 10px 24px -12px rgba(2,6,23,0.20);
-  animation: think-pop 260ms cubic-bezier(.22,.61,.36,1) both;
-  overflow: visible;
-  z-index: 1;
-}
-
-/* 🔥 Contorno degradado ANIMADO alrededor del cuadro */
-.thinking-card::before{
-  content:"";
-  position:absolute;
-  inset:-78px;
-  border-radius: 40px;
-  pointer-events:none;
-  z-index:-1;
-
-  -webkit-backdrop-filter: blur(8px) saturate(1.05);
-  backdrop-filter: blur(8px) saturate(1.05);
-
-  background:
-    radial-gradient(60% 60% at 30% 30%, rgba(71,200,255,.55), transparent 70%),
-    radial-gradient(60% 60% at 70% 30%, rgba(146,151,219,.50), transparent 70%),
-    radial-gradient(70% 70% at 50% 80%, rgba(244,155,237,.45), transparent 75%),
-    radial-gradient(60% 60% at 20% 80%, rgba(208,242,243,.35), transparent 70%),
-    conic-gradient(from 0deg,
-      rgba(71,200,255,.35),
-      rgba(146,141,244,.35),
-      rgba(244,155,237,.35),
-      rgba(71,200,255,.35));
-  background-size: 160% 160%, 160% 160%, 200% 200%, 200% 200%, 300% 300%;
-  background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%, 50% 50%;
-  mix-blend-mode: screen;
-  opacity:.9;
-  filter: blur(38px) saturate(1.8);
-
-  will-change: transform, background-position, filter;
-  animation:
-    halo-osc 6.5s ease-in-out infinite alternate,
-    halo-pan 8s cubic-bezier(.4,0,.2,1) infinite alternate,
-    swirl-rotate 18s linear infinite;
-}
-
-/* segunda capa más suave para profundidad */
-.thinking-card::after{
-  content:"";
-  position:absolute;
-  inset:-96px;
-  border-radius: 56px;
-  z-index:-2;
-  background:
-    radial-gradient(70% 70% at 75% 20%, rgba(49,102,234,.22), transparent 70%),
-    radial-gradient(60% 60% at 20% 85%, rgba(244,155,237,.20), transparent 70%);
-  filter: blur(54px) saturate(1.4);
-  mix-blend-mode: screen;
-  opacity:.55;
-  will-change: transform, background-position, filter;
-  animation:
-    halo-pulse 5.4s ease-in-out infinite,
-    halo-pan2 10s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes halo-osc {
-  0%   { transform: translate(-6px, -4px) scale(1.00); }
-  50%  { transform: translate( 8px,  6px) scale(1.04); }
-  100% { transform: translate(-4px,  8px) scale(1.02); }
-}
-@keyframes halo-pan {
-  0%   { background-position: 0% 50%, 100% 50%, 50% 0%, 0% 100%, 50% 50%; }
-  50%  { background-position: 100% 50%, 0% 50%, 50% 100%, 0% 0%, 60% 40%; }
-  100% { background-position: 0% 20%, 100% 80%, 40% 100%, 20% 0%, 40% 60%; }
-}
-@keyframes halo-pan2 {
-  0%   { background-position: 80% 30%, 20% 70%; }
-  100% { background-position: 20% 70%, 80% 30%; }
-}
-@keyframes halo-pulse {
-  0%,100% { transform: scale(1);   opacity:.55; }
-  50%     { transform: scale(1.04); opacity:.70; }
-}
-
-@keyframes think-pop{
-  0% { opacity:0; transform: translateY(8px) scale(.96); filter: blur(2px); }
-  100%{ opacity:1; transform:none; filter: blur(0); }
-}
-.thinking-title{ @apply text-sm font-semibold text-slate-700 text-center select-none; }
-.thinking-sub  { @apply text-[11px] text-slate-500 text-center select-none mt-1; }
-
-/* Auroras internas del cuadro (se mantienen) */
-.thinking-aurora{
-  position:absolute; inset:-18%;
-  filter: blur(90px) saturate(2.2) contrast(1.2) brightness(1.08);
-  opacity: 1; pointer-events:none; z-index:0;
-}
-.thinking-aurora .blob{ position:absolute; width:60%; height:60%; border-radius:50%; }
-.thinking-aurora .a{
-  left:-6%; top:-8%;
-  background: radial-gradient(closest-side, rgba(216,170,219,1), rgba(216,170,219,0) 72%);
-  animation: a-move 7s ease-in-out infinite alternate;
-}
-.thinking-aurora .b{
-  right:-8%; top:8%;
-  background: radial-gradient(closest-side, rgba(146,151,219,.98), rgba(146,151,219,0) 72%);
-  animation: b-move 8.5s ease-in-out infinite alternate;
-}
-.thinking-aurora .c{
-  left:16%; bottom:-14%; width:68%; height:68%;
-  background: radial-gradient(closest-side, rgba(204,201,220,.96), rgba(204,201,220,0) 74%);
-  animation: c-move 9s ease-in-out infinite alternate;
-}
-.thinking-aurora::after{
-  content:""; position:absolute; inset:-22%;
-  background: conic-gradient(from 0deg,
-    rgba(216,170,219,.70), rgba(146,151,219,.60), rgba(204,201,220,.70), rgba(216,170,219,.70));
-  filter: blur(120px) saturate(1.9) brightness(1.08);
-  opacity:.55; mix-blend-mode: screen;
-  animation: swirl-rotate 16s linear infinite;
-}
-@keyframes a-move{ 0%{transform:translate(0,0)} 100%{transform:translate(8%,10%)} }
-@keyframes b-move{ 0%{transform:translate(0,0)} 100%{transform:translate(-10%,8%)} }
-@keyframes c-move{ 0%{transform:translate(0,0)} 100%{transform:translate(6%,-10%)} }
-@keyframes swirl-rotate{ to{ transform: rotate(360deg);} }
-
 /* ===== Input flotante ===== */
 .chat-input-wrap{
   @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-4xl px-4;
@@ -251,10 +80,9 @@
   @apply mt-2 text-center text-[11px] text-slate-500 select-none;
 }
 
-/* Accesibilidad */
+/* Accesibilidad (limpia referencias al cuadro de pensamiento) */
 @media (prefers-reduced-motion: reduce){
-  .msg-in, .thinking-card, .thinking-card::before, .thinking-card::after,
-  .thinking-aurora::after, .thinking-aurora .blob { animation:none!important; }
+  .msg-in { animation:none!important; }
 }
 
 /* ====== Bienvenida estilo poster ====== */
@@ -316,7 +144,7 @@
     inset 0 0 2px rgba(255,255,255,.5);
 }
 
-/* Capas internas… (sin cambios) */
+/* Capas internas… */
 .avatar-sphere .avatar-core,
 .avatar-sphere .avatar-core::before,
 .avatar-sphere .avatar-core::after{
@@ -362,6 +190,8 @@
     radial-gradient(120% 120% at 75% 85%, rgba(0,0,0,.10), rgba(0,0,0,0) 60%);
   box-shadow: inset 0 0 8px rgba(0,0,0,.06);
 }
+
+/* Movimiento tipo “mezcla de fluidos” (sin rotación circular) */
 @keyframes mix-pan-core{
   0%   { transform: translate(-12%, -8%)  scale(1.03) }
   28%  { transform: translate(  8%, -5%)  scale(1.00) }
@@ -446,7 +276,7 @@
     0 10px 28px rgba(15,23,42,.08),
     0 4px 10px rgba(15,23,42,.06);
 }
-/* 🔴 eliminamos el notch para que no aparezca la “segunda esfera” */
+/* 🔴 notch eliminado para evitar “segunda esfera” */
 .bubble-ai::before{
   content:none !important;
   display:none !important;
@@ -470,3 +300,284 @@
 
 /* Respiro para el timestamp */
 .msg-in .bubble{ margin-bottom: 10px; }
+
+/* ====== Mobile fix pack (<= 640px) ====== */
+@media (max-width: 640px){
+
+  /* 1) Más espacio abajo para que el input fijo no tape los mensajes */
+  body{
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  /* 2) Las burbujas usan más ancho pero con mínimo cómodo (evita “pill” ultra-estirada) */
+  .msg-in .bubble{
+    max-width: 88% !important;
+    min-width: 60% !important;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+
+  /* 3) (notch de IA desactivado, este bloque ya no aplica) */
+  .bubble-ai::before{
+    content:none !important;
+  }
+
+  /* 4) Avatar-esfera un poco más compacta */
+  .avatar-sphere{
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-left: 2px;
+  }
+
+  /* 5) Texto y timestamp algo más contenidos */
+  .msg-in .bubble .text-sm{ line-height: 1.35; }
+  .msg-in > .flex.flex-col > .mt-1{ margin-top: 2px !important; }
+
+  /* 6) Sombras más suaves en móvil */
+  .bubble-ai{
+    box-shadow:
+      0 10px 20px rgba(15,23,42,.06),
+      0 2px 8px rgba(15,23,42,.05);
+  }
+  .bubble-user{
+    box-shadow:
+      0 10px 24px rgba(15,23,42,.18),
+      0 3px 10px rgba(15,23,42,.10);
+  }
+}
+
+/* Opcional, ayuda cuando saltas al último mensaje: deja margen de scroll
+   suficiente para que no quede oculto tras el input fijo. */
+.msg-in:last-child{ scroll-margin-bottom: 110px; }
+
+/* ====== Mobile fit pack (<=640px) — SOLO ajustes responsivos ====== */
+@media (max-width: 640px){
+  /* Más respiro lateral y abajo para que el input fijo no tape los mensajes */
+  body{
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
+  }
+
+  /* Burbujas más anchas y cómodas en móvil */
+  .msg-in .bubble{
+    max-width: 92% !important;
+    min-width: 66% !important;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+
+  /* (notch de IA desactivado) */
+  .bubble-ai::before{
+    content:none !important;
+  }
+
+  /* La esfera-Avatar un pelín más compacta */
+  .avatar-sphere{
+    width: 1.7rem;
+    height: 1.7rem;
+    margin-left: 2px;
+  }
+}
+
+/* Cuando saltas al último mensaje, que no quede oculto tras el input fijo */
+.msg-in:last-child{ scroll-margin-bottom: 140px; }
+
+/* ===== Mobile: burbuja al tamaño del texto (usuario y IA) ===== */
+@media (max-width: 640px){
+  .msg-in .bubble{
+    display: inline-flex !important;
+    width: -webkit-fit-content !important;
+    width: -moz-fit-content !important;
+    width: fit-content !important;     /* << ancho = contenido real */
+    min-width: 0 !important;           /* por si alguna util fijó min-w */
+    max-width: calc(100vw - 120px) !important; /* wrap si es larga */
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  /* Alineación sin estirar */
+  .msg-in.justify-start .bubble{ margin-right: auto; } /* IA a la izquierda */
+  .msg-in.justify-end   .bubble{ margin-left:  auto; } /* Usuario a la derecha */
+}
+
+/* ───── Reply chip (botón) ───── */
+.reply-chip{
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  color: #475569;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(15,23,42,.08);
+  box-shadow: 0 4px 10px rgba(15,23,42,.06);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.reply-chip:hover{ background:#f8fafc; transform: translateY(-1px); }
+.reply-chip:active{ transform: translateY(0); }
+
+/* ───── Preview del mensaje a responder ───── */
+.reply-preview{
+  position: relative;
+  padding: 8px 34px 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.06);
+  background: linear-gradient(to right, rgba(244,240,255,.7), rgba(255,255,255,.7));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 24px -12px rgba(2,6,23,.12);
+}
+.reply-preview::before{
+  content:"";
+  position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:12px 0 0 12px;
+  background-image: linear-gradient(180deg,#E0B89F,#B55FDE,#EA6987,#85B4E2);
+  opacity:.85;
+}
+.reply-preview .rp-title{
+  font-size:11px; font-weight:600; color:#64748b; margin-bottom:2px;
+}
+.reply-preview .rp-text{
+  font-size:12px; color:#475569;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.reply-preview .rp-close{
+  position:absolute; right:6px; top:6px;
+  width:22px; height:22px; border-radius:9999px;
+  display:grid; place-items:center;
+  color:#64748b; background:rgba(255,255,255,.65);
+  border:1px solid rgba(15,23,42,.06);
+}
+.reply-preview .rp-close:hover{ background:#ffffff; }
+
+@media (max-width: 640px){
+  .reply-chip{ font-size: 10px; padding: 6px 9px; }
+  .reply-preview{ padding: 8px 32px 8px 10px; }
+}
+
+/* Botón chip “Responder” bajo la burbuja de la IA (estilo alterno suave) */
+.reply-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; line-height:1; color:#64748b;
+  padding:6px 10px; border-radius:9999px;
+  background:#fff; border:1px solid #e5e7eb;
+  box-shadow:0 2px 6px rgba(2,6,23,.06);
+  transition:all .15s ease;
+}
+.reply-chip:hover{ color:#0f172a; border-color:#cbd5e1; box-shadow:0 4px 10px rgba(2,6,23,.08); }
+
+/* Preview “Respondiendo a …” encima del input (estilo alterno) */
+.reply-preview{
+  display:flex; align-items:flex-start; gap:10px;
+  background:rgba(255,255,255,.95);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:14px; padding:8px 12px;
+  box-shadow:0 8px 20px -10px rgba(2,6,23,.15);
+}
+.reply-preview__label{
+  font-size:11px; color:#94a3b8; margin-top:2px; white-space:nowrap;
+}
+.reply-preview__text{
+  font-size:12px; color:#475569;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.reply-preview__close{
+  margin-left:auto; flex:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:9999px;
+  color:#64748b; background:#f8fafc; border:1px solid #e2e8f0;
+}
+.reply-preview__close:hover{ background:#f1f5f9; color:#0f172a; }
+
+/* ========== Kill-switch por si el markup aún se monta ========== */
+.thinking-overlay { display:none !important; }
+
+/* ====== Header: swap con efecto de luces EN el texto ====== */
+.header-status-wrap{
+  display:inline-block;
+  position:relative;
+}
+
+.header-status-swap{
+  position: relative;
+  display: inline-block;
+  height: 1.1rem;            /* alto estable para evitar saltos */
+  min-width: 200px;          /* evita reflow brusco en el swap */
+}
+
+.header-title{
+  position: absolute;
+  inset: 0;
+  display: inline-block;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #475569;            /* gris normal */
+  opacity: 0;
+  transform: translateY(6px) scale(.98);
+  transition: opacity .26s ease, transform .26s ease, filter .26s ease;
+  filter: blur(0);
+  will-change: opacity, transform, filter;
+}
+
+.header-title.is-active{
+  opacity: 1;
+  transform: none;
+}
+
+/* Variante “Pensando…” con luces dentro del texto */
+.header-title.thinking{
+  color: transparent;                       /* el relleno será el gradient */
+  background: linear-gradient(
+    90deg,
+    #B55FDE, #5E2EF4, #EA6987, #F6AEBC, #85B4E2, #E0B89F, #B55FDE
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: header-text-pan 5.8s ease-in-out infinite alternate;
+}
+
+/* Halo: duplicamos el mismo texto detrás, con blur y el mismo gradient */
+.header-title.thinking::after{
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(
+    90deg,
+    #B55FDE, #5E2EF4, #EA6987, #F6AEBC, #85B4E2, #E0B89F, #B55FDE
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  /* El “degradado alrededor”: blur + leve escala para que salga fuera de las letras */
+  filter: blur(10px) saturate(1.35) brightness(1.06);
+  transform: scale(1.06);
+  opacity: .70;
+  pointer-events: none;
+
+  animation: header-text-pan 5.8s ease-in-out infinite alternate;
+  transition: opacity .3s ease;
+}
+
+/* Suaviza todavía más la entrada/salida del halo cuando se activa/desactiva */
+.header-title.thinking:not(.is-active)::after{
+  opacity: 0;
+}
+
+/* Movimiento del gradiente dentro del texto */
+@keyframes header-text-pan{
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Responsive afinado para móvil (texto un pelín más grande y glow más suave) */
+@media (max-width: 640px){
+  .header-status-swap{ height: 1.2rem; min-width: 180px; }
+  .header-title{ font-size: .95rem; }
+  .header-title.thinking::after{ filter: blur(9px) saturate(1.25) brightness(1.05); }
+}

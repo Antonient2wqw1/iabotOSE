@@ -16,7 +16,7 @@ export function ChatContainer({ className = "" }: { className?: string }) {
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  /** Altura REAL del input flotante para reservar espacio */
+  // Altura REAL del input flotante para reservar espacio
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerH, setFooterH] = useState<number>(120);
 
@@ -24,10 +24,8 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     const el = footerRef.current;
     if (!el) return;
 
-    // Valor inicial
     setFooterH(el.getBoundingClientRect().height);
 
-    // Observar cambios de tamaño
     if (typeof ResizeObserver !== "undefined") {
       const ro = new ResizeObserver((entries) => {
         const box = entries[0]?.contentRect;
@@ -51,6 +49,7 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     setMessages((p) => [...p, userMessage]);
     setIsGenerating(true);
 
+    // Simula respuesta IA
     setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -67,7 +66,7 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     }, 1300);
   };
 
-  /** autoscroll (incluye footerH para que baje si el input crece) */
+  // autoscroll
   useEffect(() => {
     const vp = scrollAreaRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
@@ -75,8 +74,8 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     if (vp) vp.scrollTop = vp.scrollHeight;
   }, [messages, isGenerating, footerH]);
 
-  /** Reserva de espacio al final del viewport (anti-cruce) */
-  const SAFE = 96; // ↑ margen de seguridad mayor para separar bien del input
+  // Reserva de espacio al final del viewport (anti-cruce)
+  const SAFE = 96;
   const reserveH = Math.ceil(footerH + SAFE);
 
   useEffect(() => {
@@ -88,37 +87,48 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     }
   }, [reserveH]);
 
-  // padding top para que no se peguen arriba; si está pensando, un poco más
   const topPadClass = isGenerating ? "pt-40" : "pt-28";
 
   return (
     <div className={`relative flex flex-col h-full min-h-0 ${className}`}>
       {/* Header centrado */}
       <div className="header-top">
-        <h2>Conversación con OSE AI</h2>
-        <p>{messages.length > 0 ? `${messages.length} mensajes` : "Nueva conversación"}</p>
+        <h2>
+          <span className="header-status-wrap">
+            <span className="header-status-swap">
+              {/* Estado normal */}
+              <span
+                className={`header-title ${!isGenerating ? "is-active" : ""}`}
+              >
+                Conversación con OSE AI
+              </span>
+
+              {/* Estado pensando con gradiente en el TEXTO */}
+              <span
+                className={`header-title thinking ${
+                  isGenerating ? "is-active" : ""
+                }`}
+                data-text="Pensando…"
+              >
+                Pensando…
+              </span>
+            </span>
+          </span>
+        </h2>
+
+        <p>
+          {isGenerating
+            ? "preparando la mejor respuesta"
+            : messages.length > 0
+            ? `${messages.length} mensajes`
+            : "Nueva conversación"}
+        </p>
       </div>
+
       <div className="top-fade" />
 
       {/* Espaciador: reserva altura del header */}
       <div aria-hidden className="h-24 md:h-28 shrink-0" />
-
-      {/* Overlay “Pensando…” */}
-      {isGenerating && (
-        <div className="thinking-overlay">
-          <div className="thinking-card">
-            <div className="thinking-aurora">
-              <div className="blob a"></div>
-              <div className="blob b"></div>
-              <div className="blob c"></div>
-            </div>
-            <div className="relative z-10 grid place-items-center h-full">
-              <div className="thinking-title">Pensando…</div>
-              <div className="thinking-sub">preparando la mejor respuesta</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Hero cuando no hay mensajes */}
       {messages.length === 0 && !isGenerating && (
@@ -144,7 +154,7 @@ export function ChatContainer({ className = "" }: { className?: string }) {
         </ScrollArea>
       </div>
 
-      {/* Input flotante CENTRADO (un poco más alto del borde inferior) */}
+      {/* Input flotante */}
       <div
         ref={footerRef}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-full px-4"

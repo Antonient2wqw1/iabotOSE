@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";       // 👈 correcto
+import { Textarea } from "../ui/textarea";   // 👈 correcto
+import { Send, Paperclip, X } from "lucide-react";
+import { cn } from "../../lib/utils";        // 👈 correcto
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
-  disabled?: boolean;       // suele venir de isGenerating
+  disabled?: boolean;
   isGenerating?: boolean;
+  replyTo?: { id: string; content: string } | null;
+  onCancelReply?: () => void;
 }
 
 const HINTS = [
@@ -17,7 +19,9 @@ const HINTS = [
 ];
 const TYPE_SPEED = 50, ERASE_SPEED = 22, WAIT_BEFORE_ERASE = 700;
 
-export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputProps) {
+export function ChatInput({
+  onSendMessage, disabled, isGenerating, replyTo, onCancelReply
+}: ChatInputProps) {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,18 +54,13 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
     }
   }, [message]);
 
-  // --- Enfocar SIEMPRE el textarea cuando ya no esté deshabilitado ---
+  // --- Focus cuando se habilita ---
   useEffect(() => {
-    if (!disabled) {
-      // pequeño delay para asegurar que el DOM ya pintó el estado nuevo
-      requestAnimationFrame(() => textareaRef.current?.focus());
-    }
+    if (!disabled) requestAnimationFrame(() => textareaRef.current?.focus());
   }, [disabled]);
 
   // Autofocus al montar
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
+  useEffect(() => { textareaRef.current?.focus(); }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,8 +68,7 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
     if (!text || disabled) return;
     onSendMessage(text);
     setMessage("");
-
-    // Deja el cursor listo inmediatamente (si no está deshabilitado)
+    onCancelReply?.(); // limpia el preview
     requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
@@ -80,14 +78,31 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
 
   return (
     <div className="chat-input-wrap">
+      {/* Preview “Respondiendo a …” */}
+      {replyTo && (
+        <div className="reply-preview mb-2">
+          <div>
+            <div className="rp-title">Respondiendo a la IA</div>
+            <div className="rp-text">{replyTo.content}</div>
+          </div>
+          <button
+            type="button"
+            className="rp-close"
+            aria-label="Cancelar respuesta"
+            onClick={onCancelReply}
+            title="Cancelar"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="chat-input px-4 py-2">
         <div className="flex items-center gap-3">
-          {/* Adjuntar (gris) */}
           <Button type="button" size="icon" variant="ghost" className="w-8 h-8 icon-ghost">
             <Paperclip className="w-4 h-4" />
           </Button>
 
-          {/* Textarea */}
           <div className="relative flex-1">
             <Textarea
               ref={textareaRef}
@@ -107,22 +122,18 @@ export function ChatInput({ onSendMessage, disabled, isGenerating }: ChatInputPr
               aria-label="Escribe tu mensaje"
             />
             {message.trim().length === 0 && displayText && (
-              <span
-                className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-slate-400/90 select-none"
-                aria-hidden="true"
-              >
+              <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-slate-400/90 select-none">
                 {displayText}
               </span>
             )}
           </div>
 
-          {/* Botón ENVIAR (esfera) — evita que robe el foco con onMouseDown */}
           <Button
             type="submit"
             size="icon"
             disabled={disabled || !message.trim()}
             aria-label="Enviar mensaje"
-            onMouseDown={(e) => e.preventDefault()}   // <- mantiene el foco en el textarea
+            onMouseDown={(e) => e.preventDefault()}
             className={cn(
               "relative w-9 h-9 p-0 rounded-full bg-transparent hover:bg-transparent focus-visible:ring-0",
               "disabled:opacity-60 disabled:cursor-not-allowed"

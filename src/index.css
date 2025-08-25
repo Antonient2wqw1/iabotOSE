@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,8 +87,16 @@
   .msg-in { animation:none!important; }
 }
 
-/* ====== Bienvenida estilo poster ====== */
+/* ====== Bienvenida estilo poster (fuente nueva + tamaño menor) ====== */
 .welcome-poster{
+  /* Fuente mejor para headlines */
+  font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+               Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+  /* Tamaño reducido */
+  font-size: clamp(34px, 6.2vw, 72px);
+
+  /* Estilos existentes (se mantienen) */
   background-image: linear-gradient(
     95deg,
     #E0B89F 0%,
@@ -109,7 +119,7 @@
   display: inline-block;
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: .92;
+  line-height: .95;
   white-space: pre-line;
   background-size: 180% 180%;
   animation: poster-pan 10s ease-in-out infinite alternate;
@@ -121,7 +131,8 @@
     drop-shadow(0 8px 22px rgba(233,134,188,.18))
     drop-shadow(0 3px 8px rgba(0,0,0,.04));
 }
-.welcome-poster{ font-size: clamp(42px, 8vw, 96px); }
+
+/* Animación (sin cambios) */
 @keyframes poster-pan{
   0%   { background-position: 0% 50%; }
   100% { background-position: 100% 50%; }
@@ -581,3 +592,229 @@
   .header-title{ font-size: .95rem; }
   .header-title.thinking::after{ filter: blur(9px) saturate(1.25) brightness(1.05); }
 }
+
+/* ——— Hover “espectáculo” para chats antiguos (Anteriores) ——— */
+.spectra-bg {
+  pointer-events: none;
+  will-change: transform, opacity, background-position;
+  filter: blur(18px) saturate(1.2);
+  opacity: 0.85;
+  background: linear-gradient(
+    125deg,
+    #5F4E94,
+    #E5D37F,
+    #DF946C,
+    #00000A,
+    #C2736E,
+    #D8CCE0,
+    #5F4E94
+  );
+  background-size: 400% 400%;
+  animation: spectra-shift 8s ease-in-out infinite;
+  mix-blend-mode: screen; /* se integra con el fondo sin tapar texto */
+  border-radius: 28px;
+}
+
+@keyframes spectra-shift {
+  0% { background-position: 0% 50%; transform: translate3d(-2%, 0, 0) scale(1.02) rotate(0.3deg); }
+  50% { background-position: 100% 50%; transform: translate3d(2%, 0, 0) scale(1.05) rotate(-0.2deg); }
+  100% { background-position: 0% 50%; transform: translate3d(-2%, 0, 0) scale(1.02) rotate(0.3deg); }
+}
+
+/* ===== Portada: glow suave detrás del input centrado ===== */
+.landing-glow{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%,-50%);
+  width:min(900px, 88vw);
+  height:220px;
+  border-radius:9999px;
+  pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 20% 40%, rgba(181,95,222,.35), transparent 60%),
+    radial-gradient(120% 80% at 80% 60%, rgba(234,105,135,.30), transparent 62%),
+    radial-gradient(140% 90% at 50% 50%, rgba(133,180,226,.28), transparent 65%);
+  filter: blur(28px) saturate(1.2);
+  animation: landing-float 6.5s ease-in-out infinite alternate;
+  z-index:0;
+}
+@keyframes landing-float{
+  0%   { transform: translate(-50%,-50%) scale(1.00); opacity:.85; }
+  100% { transform: translate(calc(-50% + 6px),calc(-50% - 4px)) scale(1.04); opacity:.95; }
+}
+
+/* ===== Barrido diagonal al arrancar la conversación ===== */
+.sweep-enter{
+  position: fixed;
+  inset: 0;
+  z-index: 40;           /* por encima del input/header */
+  pointer-events: none;  /* solo decorativo */
+  overflow: hidden;
+}
+
+/* Banda principal (multicolor) */
+.sweep-band{
+  position: absolute;
+  left: -15%;
+  width: 130%;
+  height: 38%;
+  top: 100%;
+  background: linear-gradient(
+    100deg,
+    #5F4E94,
+    #E5D37F,
+    #DF946C,
+    #00000A,
+    #C2736E,
+    #D8CCE0,
+    #5F4E94
+  );
+  background-size: 200% 200%;
+  filter: blur(26px) saturate(1.15) contrast(1.02);
+  opacity: 0.95;
+  transform: translateY(20%) rotate(-2deg);
+  animation:
+    sweep-band-move 950ms cubic-bezier(.22,.61,.36,1) forwards,
+    sweep-band-shift 6s ease-in-out infinite alternate;
+}
+
+/* Estela retrasada para “volumen” */
+.sweep-band--trail{
+  opacity: .55;
+  filter: blur(36px) saturate(1.1);
+  animation-delay: 60ms, 0s;
+}
+
+@keyframes sweep-band-move{
+  0%   { transform: translateY(20%) rotate(-2deg); }
+  100% { transform: translateY(-140%) rotate(1deg); opacity: 0; }
+}
+@keyframes sweep-band-shift{
+  from { background-position: 0% 50%; }
+  to   { background-position: 100% 50%; }
+}
+
+/* ===== Destello sobre el input mientras viaja al fondo ===== */
+.input-sweep-sheen{
+  position:absolute;
+  inset:-2px;                 /* que “muerda” el borde redondeado */
+  border-radius: 9999px;
+  pointer-events:none;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0) 30%,
+    rgba(255,255,255,.65) 48%,
+    rgba(255,255,255,0) 70%
+  );
+  transform: translateX(-120%);
+  animation: input-sheen 820ms ease-out forwards;
+  mix-blend-mode: screen;
+  opacity:.65;
+  filter: blur(1px);
+}
+@keyframes input-sheen { to { transform: translateX(120%); opacity:0; } }
+
+/* Oculta el viejo fade superior global (blanco) */
+.top-fade{ display:none !important; }
+
+/* Si todavía existen estilos de fades, apágalos por si acaso */
+.chat-fade-up,
+.chat-fade-down{ display:none !important; }
+
+/* Envoltorio centrado con el MISMO ancho que el input */
+.mask-wrap{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:56rem;   /* = max-w-4xl */
+  padding:0 1rem;    /* = px-4 del input */
+}
+
+/* Placa sólida del color del fondo para ocultar mensajes bajo el input */
+.chat-mask{
+  width:100%;
+  background:#1C1C1C;   /* mismo color que el fondo del chat */
+  box-shadow:none;      /* sin degradados ni sombras */
+  pointer-events:none;
+  border-radius:0;
+}
+
+/* (Opcional) si aún tienes .chat-plate, neutralízala */
+.chat-plate{ display:none !important; }
+
+/* ❌ Mata cualquier resto del fade blanco superior global */
+.top-fade{ display:none !important; }
+
+/* ========== Fondo global lava/ember (cubre página + sidebar) ========== */
+/* Colores (tu paleta) */
+:root{
+  --lava-bg: #1C1C1C;
+  --lava-a: #F86F27; /* brillo */
+  --lava-b: #B93A19; /* rojo tostado */
+  --lava-c: #BC602D; /* naranja medio */
+  --lava-d: #4E231C; /* sombra cálida */
+}
+
+/* Pinta el fondo base en toda la app */
+html, body { background: var(--lava-bg) !important; }
+
+/* Capa de gradientes suaves (debajo de todo el contenido) */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;                 /* queda detrás de todo */
+  pointer-events: none;
+
+  /* blobs grandes y suaves + base oscura */
+  background:
+    /* blob principal en esquina superior derecha */
+    radial-gradient(72% 60% at 95% 0%,
+      color-mix(in oklab, var(--lava-a) 70%, transparent) 0%,
+      color-mix(in oklab, var(--lava-c) 45%, transparent) 35%,
+      color-mix(in oklab, var(--lava-d) 25%, transparent) 63%,
+      transparent 100%
+    ),
+    /* refuerzo cálido medio-izquierda */
+    radial-gradient(50% 40% at 20% 60%,
+      color-mix(in oklab, var(--lava-b) 40%, transparent) 0%,
+      transparent 70%
+    ),
+    /* halo inferior */
+    radial-gradient(65% 55% at 50% 110%,
+      color-mix(in oklab, var(--lava-c) 25%, transparent) 0%,
+      transparent 80%
+    ),
+    /* base sólida */
+    linear-gradient(var(--lava-bg), var(--lava-bg));
+  filter: saturate(1.05) contrast(1.02);
+}
+
+/* Si tu sidebar tiene un color sólido, hazlo transparente para que se vea el fondo.
+   Añade la clase .app-sidebar a tu sidebar si quieres controlarlo sin romper nada. */
+.app-sidebar{ background: transparent !important; }
+
+/* ====== Título de bienvenida en BLANCO ====== */
+/* Conserva tamaños/anims, solo cambia relleno a blanco y añade un glow sutil */
+.welcome-poster{
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
+  color: #fff !important;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.04),
+    0 14px 34px rgba(0,0,0,.55);
+}
+
+/* Oculta la franja blanca superior global */
+.top-fade{ display:none !important; }
+
+/* El wrap que centra los fades ya se posiciona inline en el TSX; aquí
+   solo garantizamos que no capte eventos y que sus hijos ocupen todo su ancho */
+.chat-fades-wrap{ pointer-events:none; }
+.chat-fades-wrap .chat-plate,
+.chat-fades-wrap .chat-fade-up,
+.chat-fades-wrap .chat-fade-down { left:0; right:0; }

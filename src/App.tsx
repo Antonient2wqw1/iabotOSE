@@ -1,6 +1,6 @@
 // src/App.tsx
-import ChatUI from "./components/ChatUI";
+import ChatApp from "./components/ChatApp";
 
 export default function App() {
-  return <ChatUI />;
+  return <ChatApp />;
 }

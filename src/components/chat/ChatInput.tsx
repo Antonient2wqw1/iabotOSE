@@ -1,155 +1,164 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "../ui/button";       // 👈 correcto
-import { Textarea } from "../ui/textarea";   // 👈 correcto
-import { Send, Paperclip, X } from "lucide-react";
-import { cn } from "../../lib/utils";        // 👈 correcto
+import { useEffect, useRef, useState } from "react";
+import { Paperclip, Send, CornerUpLeft, X } from "lucide-react";
 
-interface ChatInputProps {
-  onSendMessage: (message: string) => void;
+type Props = {
+  onSendMessage: (text: string) => void;
   disabled?: boolean;
   isGenerating?: boolean;
-  replyTo?: { id: string; content: string } | null;
-  onCancelReply?: () => void;
-}
-
-const HINTS = [
-  "Estoy aquí para ayudarte…",
-  "Cuéntame qué necesitas",
-  "Describe tu idea o pega texto",
-];
-const TYPE_SPEED = 50, ERASE_SPEED = 22, WAIT_BEFORE_ERASE = 700;
+  replyingTo?: { id: string; content: string } | null;
+  onClearReply?: () => void;
+};
 
 export function ChatInput({
-  onSendMessage, disabled, isGenerating, replyTo, onCancelReply
-}: ChatInputProps) {
-  const [message, setMessage] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // --- Typewriter del placeholder ---
-  const [displayText, setDisplayText] = useState("");
-  const [hintIndex, setHintIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const charIndex = useRef(0);
+  onSendMessage,
+  disabled,
+  isGenerating,
+  replyingTo,
+  onClearReply,
+}: Props) {
+  const [value, setValue] = useState("");
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (message.trim().length > 0) { setDisplayText(""); return; }
-    const t = HINTS[hintIndex]; let id: any;
-    if (!isDeleting && charIndex.current < t.length) {
-      id = setTimeout(() => setDisplayText(t.slice(0, ++charIndex.current)), TYPE_SPEED);
-    } else if (!isDeleting && charIndex.current === t.length) {
-      id = setTimeout(() => setIsDeleting(true), WAIT_BEFORE_ERASE);
-    } else if (isDeleting && charIndex.current > 0) {
-      id = setTimeout(() => setDisplayText(t.slice(0, --charIndex.current)), ERASE_SPEED);
-    } else if (isDeleting && charIndex.current === 0) {
-      setIsDeleting(false); setHintIndex((p) => (p + 1) % HINTS.length);
-    }
-    return () => clearTimeout(id);
-  }, [displayText, isDeleting, hintIndex, message]);
+    const ta = taRef.current;
+    if (!ta) return;
+    const resize = () => {
+      ta.style.height = "0px";
+      ta.style.height = Math.min(200, ta.scrollHeight) + "px";
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(ta);
+    return () => ro.disconnect();
+  }, [value]);
 
-  // --- Auto-resize ---
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [message]);
+    taRef.current?.focus();
+  }, []);
 
-  // --- Focus cuando se habilita ---
   useEffect(() => {
-    if (!disabled) requestAnimationFrame(() => textareaRef.current?.focus());
-  }, [disabled]);
+    if (!isGenerating) requestAnimationFrame(() => taRef.current?.focus());
+  }, [isGenerating]);
 
-  // Autofocus al montar
-  useEffect(() => { textareaRef.current?.focus(); }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = message.trim();
-    if (!text || disabled) return;
+  const send = () => {
+    const text = value.trim();
+    if (!text || disabled || isGenerating) return;
     onSendMessage(text);
-    setMessage("");
-    onCancelReply?.(); // limpia el preview
-    requestAnimationFrame(() => textareaRef.current?.focus());
+    setValue("");
+    requestAnimationFrame(() => taRef.current?.focus());
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(e); }
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   };
+
+  const handlePickFile = () => fileRef.current?.click();
+
+  const preview =
+    (replyingTo?.content?.replace(/\s+/g, " ").slice(0, 240) ?? "") +
+    (replyingTo && replyingTo.content.length > 240 ? "…" : "");
 
   return (
-    <div className="chat-input-wrap">
-      {/* Preview “Respondiendo a …” */}
-      {replyTo && (
-        <div className="reply-preview mb-2">
-          <div>
-            <div className="rp-title">Respondiendo a la IA</div>
-            <div className="rp-text">{replyTo.content}</div>
+    <div
+      className="
+        chat-input w-full
+        rounded-[9999px] overflow-hidden         /* pill total + recorta hijos */
+        bg-white/95 dark:bg-slate-900/95
+        shadow-xl ring-1 ring-black/5 dark:ring-white/10
+        backdrop-blur
+        px-3 py-2.5                              /* un pelín más alto */
+      "
+      role="group"
+      aria-label="Caja de mensaje"
+    >
+      {replyingTo && (
+        <div
+          className="
+            mb-2 flex items-start gap-2
+            rounded-xl
+            bg-slate-100/70 dark:bg-slate-800/60
+            ring-1 ring-slate-200/70 dark:ring-slate-700/60
+            px-3 py-2
+          "
+        >
+          <CornerUpLeft className="h-4 w-4 mt-0.5 opacity-70" />
+          <div className="text-sm leading-snug text-slate-800 dark:text-slate-100 flex-1 min-w-0">
+            <span className="block truncate">{preview}</span>
           </div>
           <button
             type="button"
-            className="rp-close"
+            onClick={onClearReply}
+            className="p-1 rounded-md hover:bg-slate-200/70 dark:hover:bg-slate-700/60"
             aria-label="Cancelar respuesta"
-            onClick={onCancelReply}
-            title="Cancelar"
+            title="Cancelar respuesta"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="chat-input px-4 py-2">
-        <div className="flex items-center gap-3">
-          <Button type="button" size="icon" variant="ghost" className="w-8 h-8 icon-ghost">
-            <Paperclip className="w-4 h-4" />
-          </Button>
+      {/* Fila principal */}
+      <div className="flex items-end gap-2">
+        {/* Adjuntar */}
+        <button
+          type="button"
+          onClick={handlePickFile}
+          className="shrink-0 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label="Adjuntar"
+          title="Adjuntar"
+        >
+          <Paperclip className="h-5 w-5 opacity-70" />
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          className="hidden"
+          onChange={() => {}}
+        />
 
-          <div className="relative flex-1">
-            <Textarea
-              ref={textareaRef}
-              autoFocus
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder=""
-              disabled={disabled}
-              rows={1}
-              className={cn(
-                "w-full border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 resize-none",
-                "text-[14px] leading-[1.2] text-slate-900 placeholder:text-slate-400",
-                "min-h-0 h-[22px]"
-              )}
-              style={{ minHeight: 0, maxHeight: 120 }}
-              aria-label="Escribe tu mensaje"
-            />
-            {message.trim().length === 0 && displayText && (
-              <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 text-slate-400/90 select-none">
-                {displayText}
-              </span>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            size="icon"
-            disabled={disabled || !message.trim()}
-            aria-label="Enviar mensaje"
-            onMouseDown={(e) => e.preventDefault()}
-            className={cn(
-              "relative w-9 h-9 p-0 rounded-full bg-transparent hover:bg-transparent focus-visible:ring-0",
-              "disabled:opacity-60 disabled:cursor-not-allowed"
-            )}
-          >
-            <span className="send-sphere" aria-hidden="true">
-              <span className="send-core"></span>
-            </span>
-            <Send className="relative z-10 w-4 h-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,.35)]" />
-          </Button>
+        {/* Textarea */}
+        <div className="flex-1 min-w-0">
+          <textarea
+            ref={taRef}
+            rows={1}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Pregunta lo que quieras"
+            className="
+              w-full resize-none bg-transparent outline-none
+              text-[15px] leading-6
+              placeholder:text-slate-400 dark:placeholder:text-slate-500
+            "
+            disabled={disabled || isGenerating}
+          />
         </div>
-      </form>
 
-      <div className="input-disclaimer">
-        OSE AI puede contener errores; por favor valida la información.
+        {/* Enviar */}
+        <button
+          type="button"
+          onClick={send}
+          disabled={!value.trim() || disabled || isGenerating}
+          className="
+            shrink-0 h-9 w-9 rounded-full
+            flex items-center justify-center
+            transition
+            disabled:opacity-50 disabled:cursor-not-allowed
+            bg-gradient-to-br from-rose-300 to-pink-400 text-white
+            hover:saturate-125
+          "
+          aria-label="Enviar"
+          title="Enviar"
+        >
+          <Send className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
 }
+
+export default ChatInput;

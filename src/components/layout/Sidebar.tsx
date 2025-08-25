@@ -1,3 +1,4 @@
+// sidebar.tsx
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +29,12 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/* ================== KILL SWITCH ==================
+   Pon esto en true si quieres volver a mostrar el sidebar.
+   En false, el componente Sidebar retorna null (no se pinta).
+=================================================== */
+const SIDEBAR_ENABLED = false;
 
 interface SidebarProps {
   className?: string;
@@ -73,7 +80,14 @@ function groupByDate(items: ChatSession[]): Section[] {
   return sections;
 }
 
-export function Sidebar({
+/* ======== EXPORT PÚBLICO: apaga/enciende el sidebar ======== */
+export function Sidebar(props: SidebarProps) {
+  if (!SIDEBAR_ENABLED) return null; // 🔇 apagado total
+  return <LegacySidebar {...props} />;
+}
+
+/* ======== IMPLEMENTACIÓN ORIGINAL (preservada) ======== */
+function LegacySidebar({
   className,
   onNewChat,
   onSelectChat,

@@ -4,21 +4,39 @@ import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import type { Card } from "../cards/RichCards";
 
+// ======= Aurora solo en landing =======
+function AuroraBackdrop({ active }: { active: boolean }) {
+  return (
+    <div
+      data-aurora
+      className={[
+        "aurora-veil",
+        "is-animated",
+        "transition-[opacity,transform,filter]",
+        "duration-[1200ms]",
+        "ease-[cubic-bezier(.22,.61,.36,1)]",
+        active ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-[1.05] -translate-y-[1.5%]",
+      ].join(" ")}
+    />
+  );
+}
+
 type Message = {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: string;
   cards?: Card[];
+  replyToId?: string;
 };
 
 export function ChatContainer({ className = "" }: { className?: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const [replyingTo, setReplyingTo] = useState<{ id: string; content: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Altura REAL del input flotante para reservar espacio en el scroll
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerH, setFooterH] = useState<number>(120);
 
@@ -40,10 +58,7 @@ export function ChatContainer({ className = "" }: { className?: string }) {
   const now = () =>
     new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
-  // ===== Efecto barrido + sheen en el primer envío
   const [playSweep, setPlaySweep] = useState(false);
-
-  // Helpers de intents (tu lógica original)
   const has = (text: string, re: RegExp) => re.test(text.toLowerCase());
 
   const handleSendMessage = (content: string) => {
@@ -59,11 +74,13 @@ export function ChatContainer({ className = "" }: { className?: string }) {
       content,
       role: "user",
       timestamp: now(),
+      replyToId: replyingTo?.id || undefined,
     };
     setMessages((p) => [...p, userMessage]);
+
+    if (replyingTo) setReplyingTo(null);
     setIsGenerating(true);
 
-    // Simulación "pensando…"
     setTimeout(() => {
       const t = content.toLowerCase();
       let assistant: Message | null = null;
@@ -242,30 +259,6 @@ export function ChatContainer({ className = "" }: { className?: string }) {
             },
           ],
         };
-      } else if (has(t, /(estr[eé]s|analytics|monitor|badge|feature hero)/)) {
-        assistant = {
-          id: (Date.now() + 1).toString(),
-          content: "Módulo destacado:",
-          role: "assistant",
-          timestamp: now(),
-          cards: [
-            {
-              type: "featureHero",
-              imageUrl: "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?q=80&w=1400&auto=format&fit=crop",
-              badges: [
-                "24/7 Monitoring",
-                "⚡ AI-Powered Alerts",
-                "🔒 End-to-End Encryption",
-                "Stress Forecasting",
-                "❤️ Custom Thresholds",
-              ],
-              title: "Real Time Stress Analytics",
-              body: "Integra con tus herramientas para ofrecer insights y estrategias personalizadas.",
-              primary: { label: "Start free trial", href: "#" },
-              secondary: { label: "Watch Demo", href: "#" },
-            },
-          ],
-        };
       } else {
         assistant = {
           id: (Date.now() + 1).toString(),
@@ -289,41 +282,44 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     if (vp) vp.scrollTop = vp.scrollHeight;
   }, [messages, isGenerating, footerH]);
 
-  const SAFE = 96;            // lo que ya tenías
-  const MASK_EXTRA = 72;      // << ajustable (64–96 si quieres más)
+  // === ⭐ Ajuste anti “salto hacia arriba” =========================
+  // Pequeño padding del viewport y un spacer final del alto real del input
+  const bottomGap = 32;                   // separación visual del input al borde
+  const SAFE = 56;                        // padding real pequeño del viewport
+  const reserveH = Math.ceil(footerH + bottomGap); // spacer al final de la lista
+  // ================================================================
 
-  const reserveH = Math.ceil(footerH + SAFE + MASK_EXTRA);
-
-  // Portada vs conversación
   const isLanding = messages.length === 0 && !isGenerating;
 
-  // Reservar espacio en el viewport para el input
+  // Aplica solo un padding pequeño al viewport (el spacer hace el resto)
   useEffect(() => {
     const vp = scrollAreaRef.current?.querySelector(
       "[data-radix-scroll-area-viewport]"
     ) as HTMLElement | null;
     if (vp) {
-      vp.style.paddingBottom = isLanding ? "0px" : `${reserveH}px`;
+      vp.style.paddingBottom = isLanding ? "0px" : `${SAFE}px`;
     }
-  }, [reserveH, isLanding]);
+  }, [SAFE, isLanding]);
 
   const topPadClass = isGenerating ? "pt-40" : "pt-28";
 
-  // === Posición animable del input
-  const bottomGap = 32; // como bottom-8
+  // Posición animable del input
   const targetTop = isLanding ? "50%" : `calc(100% - ${footerH + bottomGap}px)`;
   const targetTransform = `translate(-50%, ${isLanding ? "-50%" : "0"})`;
 
+  const findById = (id?: string) => (id ? messages.find((m) => m.id === id) || null : null);
+
   return (
     <div className={`relative flex flex-col h-full min-h-0 ${className}`}>
+      {/* 🌈 AURORA en landing */}
+      <AuroraBackdrop active={isLanding} />
+
       {/* Header */}
-      <div className="header-top">
+      <div className="header-top relative z-[2]">
         <h2>
           <span className="header-status-wrap">
             <span className="header-status-swap">
-              <span className={`header-title ${!isGenerating ? "is-active" : ""}`}>
-                Conversación con OSE AI
-              </span>
+              <span className={`header-title ${!isGenerating ? "is-active" : ""}`}>Conversación con OSE AI</span>
               <span className={`header-title thinking ${isGenerating ? "is-active" : ""}`} data-text="Pensando…">
                 Pensando…
               </span>
@@ -331,56 +327,52 @@ export function ChatContainer({ className = "" }: { className?: string }) {
           </span>
         </h2>
         <p>
-          {isGenerating
-            ? "preparando la mejor respuesta"
-            : messages.length > 0
-            ? `${messages.length} mensajes`
-            : "Nueva conversación"}
+          {isGenerating ? "preparando la mejor respuesta" : messages.length > 0 ? `${messages.length} mensajes` : "Nueva conversación"}
         </p>
       </div>
-
-      {/* (oculto) top-fade eliminado por CSS */}
 
       {/* Spacer header */}
       <div aria-hidden className="h-24 md:h-28 shrink-0" />
 
       {/* Hero cuando no hay mensajes */}
       {isLanding && (
-        <div className="pointer-events-none absolute inset-x-0 top-24 flex justify-center z-10">
-          <div className="w-full max-w-[980px] px-6">
-            <h1 className="welcome-poster text-left">
-              {"Hola\nSoy OSE AI\nme da gusto\nverte."}
-            </h1>
+        <div
+          className="pointer-events-none absolute inset-x-0 z-[2] flex justify-center"
+          // sitúo el hero un poco por encima del input que está en 50%
+          style={{ top: "calc(50% - 170px)" }}
+        >
+          <div className="w-full max-w-[900px] px-6 text-center">
+            <h1 className="hero-title">Hola, soy OSE AI</h1>
+            <p className="hero-subtitle">Me da gusto verte.</p>
           </div>
         </div>
       )}
 
       {/* Lista de mensajes */}
-      <div className="relative flex-1 min-h-0">
+      <div className="relative flex-1 min-h-0 z-[2]">
         <ScrollArea ref={scrollAreaRef} className="h-full">
           <div className={`mx-auto max-w-4xl ${topPadClass} space-y-6 px-4`}>
-            {messages.map((m) => (
-              <ChatMessage key={m.id} message={m} />
-            ))}
+            {messages.map((m) => {
+              const ref = findById(m.replyToId);
+              const repliedTo = ref ? { id: ref.id, content: ref.content, role: ref.role } : null;
+              return (
+                <ChatMessage
+                  key={m.id}
+                  message={m}
+                  repliedTo={repliedTo}
+                  onReply={setReplyingTo}
+                />
+              );
+            })}
+            {/* Spacer final: evita que el input tape el último mensaje sin empujar el timeline hacia arriba */}
             <div aria-hidden style={{ height: reserveH }} />
           </div>
         </ScrollArea>
-
-        {/* 🔒 Bloque sólido que tapa mensajes bajo el input (mismo ancho que el input) */}
-        {!isLanding && (
-          <div className="pointer-events-none absolute inset-0 z-[95]">
-            {/* Misma anchura que el input (max-w-4xl + px-4) y pegado al fondo */}
-            <div className="mask-wrap" style={{ bottom: bottomGap }}>
-              {/* Usamos reserveH (input + SAFE) para cubrir TODO */}
-              <div className="chat-mask" style={{ height: reserveH }} />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Barrido de fondo al primer envío */}
       {playSweep && (
-        <div className="sweep-enter" aria-hidden>
+        <div className="sweep-enter z-[2]" aria-hidden>
           <div className="sweep-band" />
           <div className="sweep-band sweep-band--trail" />
         </div>
@@ -389,23 +381,23 @@ export function ChatContainer({ className = "" }: { className?: string }) {
       {/* Input flotante */}
       <div
         ref={footerRef}
-        className="absolute left-1/2 z-[100] w-full px-4"
+        className="absolute left-1/2 z-[3] w-full px-4"
         style={{
           top: targetTop,
           transform: targetTransform,
-          transition:
-            "top 720ms cubic-bezier(.22,.61,.36,1), transform 720ms cubic-bezier(.22,.61,.36,1)",
+          transition: "top 720ms cubic-bezier(.22,.61,.36,1), transform 720ms cubic-bezier(.22,.61,.36,1)",
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        {isLanding && <div className="landing-glow" aria-hidden />}
         <div className={isLanding ? "mx-auto max-w-3xl pointer-events-auto" : "mx-auto w-full max-w-4xl pointer-events-auto"}>
           <div className="relative">
-            {playSweep && <span className="input-sweep-sheen" aria-hidden />}
+            <span className="input-sweep-sheen" aria-hidden style={{ display: playSweep ? "block" : "none" }} />
             <ChatInput
               onSendMessage={handleSendMessage}
               disabled={isGenerating}
               isGenerating={isGenerating}
+              replyingTo={replyingTo}
+              onClearReply={() => setReplyingTo(null)}
             />
           </div>
         </div>

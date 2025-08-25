@@ -289,8 +289,10 @@ export function ChatContainer({ className = "" }: { className?: string }) {
     if (vp) vp.scrollTop = vp.scrollHeight;
   }, [messages, isGenerating, footerH]);
 
-  const SAFE = 96;
-  const reserveH = Math.ceil(footerH + SAFE);
+  const SAFE = 96;            // lo que ya tenías
+  const MASK_EXTRA = 72;      // << ajustable (64–96 si quieres más)
+
+  const reserveH = Math.ceil(footerH + SAFE + MASK_EXTRA);
 
   // Portada vs conversación
   const isLanding = messages.length === 0 && !isGenerating;
@@ -366,9 +368,11 @@ export function ChatContainer({ className = "" }: { className?: string }) {
 
         {/* 🔒 Bloque sólido que tapa mensajes bajo el input (mismo ancho que el input) */}
         {!isLanding && (
-          <div className="pointer-events-none absolute inset-0 z-[18]">
+          <div className="pointer-events-none absolute inset-0 z-[95]">
+            {/* Misma anchura que el input (max-w-4xl + px-4) y pegado al fondo */}
             <div className="mask-wrap" style={{ bottom: bottomGap }}>
-              <div className="chat-mask" style={{ height: footerH }} />
+              {/* Usamos reserveH (input + SAFE) para cubrir TODO */}
+              <div className="chat-mask" style={{ height: reserveH }} />
             </div>
           </div>
         )}

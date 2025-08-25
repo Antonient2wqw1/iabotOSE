@@ -4,37 +4,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Base mínima sobre blanco ===== */
+/* ---------- Paleta global (lava/ember) ---------- */
+:root{
+  --lava-bg: #1C1C1C;
+  --lava-a: #F86F27; /* brillo */
+  --lava-b: #B93A19; /* rojo tostado */
+  --lava-c: #BC602D; /* naranja medio */
+  --lava-d: #4E231C; /* sombra cálida */
+}
+
+/* ===== Base mínima ===== */
 @layer base {
   * { @apply border-transparent; }
 
   body {
-    @apply bg-white text-slate-900 font-sans antialiased;
-    background:#fff;
+    @apply text-slate-900 font-sans antialiased;
+    background: var(--lava-bg);
   }
 }
 
-/* ===== Header centrado (texto simple) ===== */
-.header-top {
-  @apply fixed left-1/2 -translate-x-1/2 top-3 z-30 text-center;
-}
-.header-top h2 {
-  @apply text-slate-600 text-sm font-semibold;
-}
-.header-top p {
-  @apply text-slate-400 text-[11px] mt-0.5;
+/* Fondo global con blobs suaves (debajo de todo) */
+html, body { background: var(--lava-bg) !important; }
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;          /* detrás de todo */
+  pointer-events: none;
+  background:
+    radial-gradient(72% 60% at 95% 0%,
+      color-mix(in oklab, var(--lava-a) 70%, transparent) 0%,
+      color-mix(in oklab, var(--lava-c) 45%, transparent) 35%,
+      color-mix(in oklab, var(--lava-d) 25%, transparent) 63%,
+      transparent 100%
+    ),
+    radial-gradient(50% 40% at 20% 60%,
+      color-mix(in oklab, var(--lava-b) 40%, transparent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(65% 55% at 50% 110%,
+      color-mix(in oklab, var(--lava-c) 25%, transparent) 0%,
+      transparent 80%
+    ),
+    linear-gradient(var(--lava-bg), var(--lava-bg));
+  filter: saturate(1.05) contrast(1.02);
 }
 
-/* ===== Fade superior ===== */
-.top-fade {
-  position: fixed;
-  top: 48px;
-  left: 0; right: 0;
-  height: 90px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
-  z-index: 5;
-}
+/* Si tu sidebar tiene color sólido, hazla transparente
+   (añade la clase .app-sidebar a tu sidebar) */
+.app-sidebar{ background: transparent !important; }
+
+/* ===== Header centrado ===== */
+.header-top { @apply fixed left-1/2 -translate-x-1/2 top-3 z-30 text-center; }
+.header-top h2 { @apply text-slate-600 text-sm font-semibold; }
+.header-top p  { @apply text-slate-400 text-[11px] mt-0.5; }
+
+/* Apaga cualquier fade blanco global heredado */
+.top-fade{ display:none !important; }
 
 /* ===== Burbujas ===== */
 .bubble {
@@ -65,113 +91,54 @@
 @keyframes sheen { to { transform: translateX(120%); opacity:0; } }
 
 /* ===== Input flotante ===== */
-.chat-input-wrap{
-  @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-4xl px-4;
-}
+.chat-input-wrap{ @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-4xl px-4; }
 .chat-input{
-  /* antes: rounded-2xl */
   @apply w-full bg-white/95 backdrop-blur border border-slate-200 rounded-[28px] sm:rounded-[32px] shadow-md px-3 py-2;
 }
-.chat-input textarea{
-  @apply text-slate-900 placeholder:text-slate-400 leading-[1.4];
-}
+.chat-input textarea{ @apply text-slate-900 placeholder:text-slate-400 leading-[1.4]; }
 .icon-ghost { @apply text-slate-400; }
 
 /* Aviso centrado bajo el input */
-.input-disclaimer{
-  @apply mt-2 text-center text-[11px] text-slate-500 select-none;
-}
+.input-disclaimer{ @apply mt-2 text-center text-[11px] text-slate-500 select-none; }
 
-/* Accesibilidad (limpia referencias al cuadro de pensamiento) */
+/* Accesibilidad */
 @media (prefers-reduced-motion: reduce){
   .msg-in { animation:none!important; }
 }
 
-/* ====== Bienvenida estilo poster (fuente nueva + tamaño menor) ====== */
+/* ===== Bienvenida estilo poster (fuente nueva, BLANCO) ===== */
 .welcome-poster{
-  /* Fuente mejor para headlines */
   font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
                Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-
-  /* Tamaño reducido */
-  font-size: clamp(34px, 6.2vw, 72px);
-
-  /* Estilos existentes (se mantienen) */
-  background-image: linear-gradient(
-    95deg,
-    #E0B89F 0%,
-    #B55FDE 10%,
-    #C48099 18%,
-    #D967C9 28%,
-    #E986BC 36%,
-    #9751E7 45%,
-    #EA6987 55%,
-    #F6AEBC 64%,
-    #85B4E2 74%,
-    #5E2EF4 83%,
-    #729EDD 92%,
-    #D9679A 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-
-  display: inline-block;
   font-weight: 800;
+  font-size: clamp(34px, 6.2vw, 72px);
   letter-spacing: -0.02em;
   line-height: .95;
   white-space: pre-line;
-  background-size: 180% 180%;
-  animation: poster-pan 10s ease-in-out infinite alternate;
 
+  color: #fff !important;
   text-shadow:
-    0 0 1px rgba(255,255,255,.35),
-    0 10px 30px rgba(94,46,244,.16);
-  filter:
-    drop-shadow(0 8px 22px rgba(233,134,188,.18))
-    drop-shadow(0 3px 8px rgba(0,0,0,.04));
+    0 1px 0 rgba(255,255,255,.04),
+    0 14px 34px rgba(0,0,0,.55);
 }
 
-/* Animación (sin cambios) */
-@keyframes poster-pan{
-  0%   { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-
-/* ===== Avatar IA — esfera multicolor sin blend (anti-borde) ===== */
+/* ===== Avatar IA — esfera multicolor ===== */
 .avatar-sphere{
-  width: 2rem; /* 32px */
-  height: 2rem;
-  position: relative;
-  border-radius: 9999px;
-  overflow: hidden;
+  width: 2rem; height: 2rem; position: relative;
+  border-radius: 9999px; overflow: hidden;
   clip-path: circle(calc(50% - 0.6px) at 50% 50%);
-  background: transparent;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  z-index: 3; /* sobre la burbuja para que parezca “morderla” */
-  box-shadow:
-    0 3px 10px rgba(94,46,244,.18),
-    inset 0 0 2px rgba(255,255,255,.5);
+  background: transparent; transform: translateZ(0);
+  backface-visibility: hidden; z-index: 3;
+  box-shadow: 0 3px 10px rgba(94,46,244,.18), inset 0 0 2px rgba(255,255,255,.5);
 }
-
-/* Capas internas… */
 .avatar-sphere .avatar-core,
 .avatar-sphere .avatar-core::before,
 .avatar-sphere .avatar-core::after{
-  content:"";
-  position:absolute;
-  width: 260%;
-  height: 260%;
-  left: -80%;
-  top:  -80%;
-  border-radius: 50%;
-  pointer-events:none;
+  content:""; position:absolute; width: 260%; height: 260%;
+  left: -80%; top: -80%; border-radius: 50%; pointer-events:none;
   filter: blur(14px) saturate(1.55) contrast(1.12) brightness(1.05);
-  will-change: transform;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  opacity: .95;
+  will-change: transform; animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite; opacity: .95;
 }
 .avatar-sphere .avatar-core{
   background:
@@ -194,15 +161,12 @@
   animation: mix-pan-b 11.2s infinite;
 }
 .avatar-sphere::after{
-  content:"";
-  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
   background:
     radial-gradient(140% 120% at 28% 20%, rgba(255,255,255,.35), rgba(255,255,255,0) 55%),
     radial-gradient(120% 120% at 75% 85%, rgba(0,0,0,.10), rgba(0,0,0,0) 60%);
   box-shadow: inset 0 0 8px rgba(0,0,0,.06);
 }
-
-/* Movimiento tipo “mezcla de fluidos” (sin rotación circular) */
 @keyframes mix-pan-core{
   0%   { transform: translate(-12%, -8%)  scale(1.03) }
   28%  { transform: translate(  8%, -5%)  scale(1.00) }
@@ -223,25 +187,14 @@
   100% { transform: translate(-8%, 16%) scale(1.03) }
 }
 
-/* ===== Botón ENVIAR — esfera animada, CLIPPEADA dentro del botón ===== */
+/* ===== Botón ENVIAR — esfera animada ===== */
 .send-sphere{
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  overflow: hidden;
-  isolation: isolate;
-  contain: paint;
-  background: transparent;
-  box-shadow:
-    inset 0 0 2px rgba(255,255,255,.35),
-    0 2px 8px rgba(17,24,39,.10);
+  position: absolute; inset: 0; border-radius: 9999px; overflow: hidden;
+  isolation: isolate; contain: paint; background: transparent;
+  box-shadow: inset 0 0 2px rgba(255,255,255,.35), 0 2px 8px rgba(17,24,39,.10);
 }
 .send-sphere .send-core{
-  position: absolute;
-  width: 220%;
-  height: 220%;
-  left: -60%;
-  top:  -60%;
+  position: absolute; width: 220%; height: 220%; left: -60%; top:-60%;
   border-radius: 50%;
   background:
     radial-gradient(closest-side at 35% 35%, #F0CDEE, transparent 62%),
@@ -253,13 +206,11 @@
     radial-gradient(closest-side at 42% 62%, #E6522A, transparent 60%),
     radial-gradient(closest-side at 58% 40%, #F5E1C6, transparent 60%);
   filter: blur(12px) saturate(1.45) contrast(1.04) brightness(1.04);
-  will-change: transform;
-  animation: send-mix 7.6s ease-in-out infinite alternate;
+  will-change: transform; animation: send-mix 7.6s ease-in-out infinite alternate;
   transform: translateZ(0);
 }
 .send-sphere::after{
-  content:"";
-  position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
   background:
     radial-gradient(120% 110% at 28% 20%, rgba(255,255,255,.45), rgba(255,255,255,0) 58%),
     radial-gradient(110% 110% at 78% 82%, rgba(0,0,0,.10), rgba(0,0,0,0) 60%);
@@ -270,191 +221,88 @@
   100% { transform: translate(-14%,   6%) scale(1.02); }
 }
 
-/* ===== Override: Burbujas estilo "pill" con notch desactivado ===== */
-.bubble{
-  border-radius: 9999px !important;        /* pastilla total */
-  padding: 14px 18px;                      /* un poco más cómoda */
-}
-
-/* IA: pill clara (sin notch visible) */
+/* ===== Override: Burbujas pill ===== */
+.bubble{ border-radius: 9999px !important; padding: 14px 18px; }
 .bubble-ai{
-  background:#ffffff !important;
-  color:#0f172a !important;
-  border:1px solid #e5e7eb !important;
-  border-radius:9999px !important;
-  z-index:1;
-  box-shadow:
-    0 10px 28px rgba(15,23,42,.08),
-    0 4px 10px rgba(15,23,42,.06);
+  background:#ffffff !important; color:#0f172a !important;
+  border:1px solid #e5e7eb !important; border-radius:9999px !important; z-index:1;
+  box-shadow: 0 10px 28px rgba(15,23,42,.08), 0 4px 10px rgba(15,23,42,.06);
 }
-/* 🔴 notch eliminado para evitar “segunda esfera” */
-.bubble-ai::before{
-  content:none !important;
-  display:none !important;
-}
-
-/* Usuario: pill oscura sin notch */
+.bubble-ai::before{ content:none !important; display:none !important; }
 .bubble-user{
-  background:#111827 !important;
-  color:#ffffff !important;
-  border:0 !important;
-  border-radius:9999px !important;
-  box-shadow:
-    0 12px 30px rgba(15,23,42,.20),
-    0 4px 12px rgba(15,23,42,.10);
+  background:#111827 !important; color:#ffffff !important; border:0 !important; border-radius:9999px !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,.20), 0 4px 12px rgba(15,23,42,.10);
 }
 .bubble-user::before{ content:none !important; }
-
-/* El brillo "sheen" sólo en la burbuja clara */
 .bubble-user .bubble-sheen{ display:none; }
 .bubble-ai   .bubble-sheen{ display:block; }
-
-/* Respiro para el timestamp */
 .msg-in .bubble{ margin-bottom: 10px; }
 
-/* ====== Mobile fix pack (<= 640px) ====== */
+/* ===== Responsivo ===== */
 @media (max-width: 640px){
-
-  /* 1) Más espacio abajo para que el input fijo no tape los mensajes */
-  body{
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
-  }
-
-  /* 2) Las burbujas usan más ancho pero con mínimo cómodo (evita “pill” ultra-estirada) */
+  body{ padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .msg-in .bubble{
-    max-width: 88% !important;
-    min-width: 60% !important;
-    padding: 12px 16px;
-    margin-bottom: 12px;
+    max-width: 88% !important; min-width: 60% !important; padding: 12px 16px; margin-bottom: 12px;
   }
-
-  /* 3) (notch de IA desactivado, este bloque ya no aplica) */
-  .bubble-ai::before{
-    content:none !important;
-  }
-
-  /* 4) Avatar-esfera un poco más compacta */
-  .avatar-sphere{
-    width: 1.6rem;
-    height: 1.6rem;
-    margin-left: 2px;
-  }
-
-  /* 5) Texto y timestamp algo más contenidos */
+  .avatar-sphere{ width: 1.6rem; height: 1.6rem; margin-left: 2px; }
   .msg-in .bubble .text-sm{ line-height: 1.35; }
   .msg-in > .flex.flex-col > .mt-1{ margin-top: 2px !important; }
-
-  /* 6) Sombras más suaves en móvil */
-  .bubble-ai{
-    box-shadow:
-      0 10px 20px rgba(15,23,42,.06),
-      0 2px 8px rgba(15,23,42,.05);
-  }
-  .bubble-user{
-    box-shadow:
-      0 10px 24px rgba(15,23,42,.18),
-      0 3px 10px rgba(15,23,42,.10);
-  }
+  .bubble-ai{ box-shadow: 0 10px 20px rgba(15,23,42,.06), 0 2px 8px rgba(15,23,42,.05); }
+  .bubble-user{ box-shadow: 0 10px 24px rgba(15,23,42,.18), 0 3px 10px rgba(15,23,42,.10); }
 }
-
-/* Opcional, ayuda cuando saltas al último mensaje: deja margen de scroll
-   suficiente para que no quede oculto tras el input fijo. */
 .msg-in:last-child{ scroll-margin-bottom: 110px; }
 
-/* ====== Mobile fit pack (<=640px) — SOLO ajustes responsivos ====== */
 @media (max-width: 640px){
-  /* Más respiro lateral y abajo para que el input fijo no tape los mensajes */
-  body{
-    padding-bottom: calc(112px + env(safe-area-inset-bottom));
-  }
-
-  /* Burbujas más anchas y cómodas en móvil */
+  body{ padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
   .msg-in .bubble{
-    max-width: 92% !important;
-    min-width: 66% !important;
-    padding: 12px 16px;
-    margin-bottom: 12px;
+    max-width: 92% !important; min-width: 66% !important; padding: 12px 16px; margin-bottom: 12px;
   }
-
-  /* (notch de IA desactivado) */
-  .bubble-ai::before{
-    content:none !important;
-  }
-
-  /* La esfera-Avatar un pelín más compacta */
-  .avatar-sphere{
-    width: 1.7rem;
-    height: 1.7rem;
-    margin-left: 2px;
-  }
+  .avatar-sphere{ width: 1.7rem; height: 1.7rem; margin-left: 2px; }
 }
-
-/* Cuando saltas al último mensaje, que no quede oculto tras el input fijo */
 .msg-in:last-child{ scroll-margin-bottom: 140px; }
 
-/* ===== Mobile: burbuja al tamaño del texto (usuario y IA) ===== */
 @media (max-width: 640px){
   .msg-in .bubble{
     display: inline-flex !important;
     width: -webkit-fit-content !important;
     width: -moz-fit-content !important;
-    width: fit-content !important;     /* << ancho = contenido real */
-    min-width: 0 !important;           /* por si alguna util fijó min-w */
-    max-width: calc(100vw - 120px) !important; /* wrap si es larga */
-    white-space: pre-wrap;
-    word-break: break-word;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 120px) !important;
+    white-space: pre-wrap; word-break: break-word;
   }
-  /* Alineación sin estirar */
-  .msg-in.justify-start .bubble{ margin-right: auto; } /* IA a la izquierda */
-  .msg-in.justify-end   .bubble{ margin-left:  auto; } /* Usuario a la derecha */
+  .msg-in.justify-start .bubble{ margin-right: auto; }
+  .msg-in.justify-end   .bubble{ margin-left:  auto; }
 }
 
-/* ───── Reply chip (botón) ───── */
+/* ===== Reply chip & preview ===== */
 .reply-chip{
-  font-size: 11px;
-  line-height: 1;
-  padding: 6px 10px;
-  border-radius: 9999px;
-  color: #475569;
-  background: rgba(255,255,255,.85);
+  font-size: 11px; line-height: 1; padding: 6px 10px; border-radius: 9999px;
+  color: #475569; background: rgba(255,255,255,.85);
   border: 1px solid rgba(15,23,42,.08);
   box-shadow: 0 4px 10px rgba(15,23,42,.06);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease;
 }
 .reply-chip:hover{ background:#f8fafc; transform: translateY(-1px); }
 .reply-chip:active{ transform: translateY(0); }
 
-/* ───── Preview del mensaje a responder ───── */
 .reply-preview{
-  position: relative;
-  padding: 8px 34px 8px 12px;
-  border-radius: 12px;
+  position: relative; padding: 8px 34px 8px 12px; border-radius: 12px;
   border: 1px solid rgba(15,23,42,.06);
   background: linear-gradient(to right, rgba(244,240,255,.7), rgba(255,255,255,.7));
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   box-shadow: 0 10px 24px -12px rgba(2,6,23,.12);
 }
 .reply-preview::before{
-  content:"";
-  position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:12px 0 0 12px;
-  background-image: linear-gradient(180deg,#E0B89F,#B55FDE,#EA6987,#85B4E2);
-  opacity:.85;
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:12px 0 0 12px;
+  background-image: linear-gradient(180deg,#E0B89F,#B55FDE,#EA6987,#85B4E2); opacity:.85;
 }
-.reply-preview .rp-title{
-  font-size:11px; font-weight:600; color:#64748b; margin-bottom:2px;
-}
-.reply-preview .rp-text{
-  font-size:12px; color:#475569;
-  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-}
+.reply-preview .rp-title{ font-size:11px; font-weight:600; color:#64748b; margin-bottom:2px; }
+.reply-preview .rp-text{ font-size:12px; color:#475569; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .reply-preview .rp-close{
-  position:absolute; right:6px; top:6px;
-  width:22px; height:22px; border-radius:9999px;
-  display:grid; place-items:center;
-  color:#64748b; background:rgba(255,255,255,.65);
+  position:absolute; right:6px; top:6px; width:22px; height:22px; border-radius:9999px;
+  display:grid; place-items:center; color:#64748b; background:rgba(255,255,255,.65);
   border:1px solid rgba(15,23,42,.06);
 }
 .reply-preview .rp-close:hover{ background:#ffffff; }
@@ -464,7 +312,7 @@
   .reply-preview{ padding: 8px 32px 8px 10px; }
 }
 
-/* Botón chip “Responder” bajo la burbuja de la IA (estilo alterno suave) */
+/* Variante alterna */
 .reply-chip{
   display:inline-flex; align-items:center; gap:6px;
   font-size:11px; line-height:1; color:#64748b;
@@ -475,7 +323,6 @@
 }
 .reply-chip:hover{ color:#0f172a; border-color:#cbd5e1; box-shadow:0 4px 10px rgba(2,6,23,.08); }
 
-/* Preview “Respondiendo a …” encima del input (estilo alterno) */
 .reply-preview{
   display:flex; align-items:flex-start; gap:10px;
   background:rgba(255,255,255,.95);
@@ -484,245 +331,79 @@
   border-radius:14px; padding:8px 12px;
   box-shadow:0 8px 20px -10px rgba(2,6,23,.15);
 }
-.reply-preview__label{
-  font-size:11px; color:#94a3b8; margin-top:2px; white-space:nowrap;
-}
+.reply-preview__label{ font-size:11px; color:#94a3b8; margin-top:2px; white-space:nowrap; }
 .reply-preview__text{
-  font-size:12px; color:#475569;
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+  font-size:12px; color:#475569; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
   overflow:hidden; text-overflow:ellipsis;
 }
 .reply-preview__close{
-  margin-left:auto; flex:none;
-  display:inline-flex; align-items:center; justify-content:center;
-  width:22px; height:22px; border-radius:9999px;
-  color:#64748b; background:#f8fafc; border:1px solid #e2e8f0;
+  margin-left:auto; flex:none; display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:9999px; color:#64748b; background:#f8fafc; border:1px solid #e2e8f0;
 }
 .reply-preview__close:hover{ background:#f1f5f9; color:#0f172a; }
 
-/* ========== Kill-switch por si el markup aún se monta ========== */
+/* ========== Kill-switch overlay antiguo ========== */
 .thinking-overlay { display:none !important; }
 
-/* ====== Header: swap con efecto de luces EN el texto ====== */
-.header-status-wrap{
-  display:inline-block;
-  position:relative;
-}
-
-.header-status-swap{
-  position: relative;
-  display: inline-block;
-  height: 1.1rem;            /* alto estable para evitar saltos */
-  min-width: 200px;          /* evita reflow brusco en el swap */
-}
-
+/* ===== Header “Pensando…” con luces ===== */
+.header-status-wrap{ display:inline-block; position:relative; }
+.header-status-swap{ position: relative; display: inline-block; height: 1.1rem; min-width: 200px; }
 .header-title{
-  position: absolute;
-  inset: 0;
-  display: inline-block;
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #475569;            /* gris normal */
-  opacity: 0;
-  transform: translateY(6px) scale(.98);
+  position: absolute; inset: 0; display: inline-block; text-align: center;
+  font-weight: 600; font-size: 0.9rem; color: #475569;
+  opacity: 0; transform: translateY(6px) scale(.98);
   transition: opacity .26s ease, transform .26s ease, filter .26s ease;
-  filter: blur(0);
-  will-change: opacity, transform, filter;
+  filter: blur(0); will-change: opacity, transform, filter;
 }
-
-.header-title.is-active{
-  opacity: 1;
-  transform: none;
-}
-
-/* Variante “Pensando…” con luces dentro del texto */
+.header-title.is-active{ opacity: 1; transform: none; }
 .header-title.thinking{
-  color: transparent;                       /* el relleno será el gradient */
-  background: linear-gradient(
-    90deg,
-    #B55FDE, #5E2EF4, #EA6987, #F6AEBC, #85B4E2, #E0B89F, #B55FDE
-  );
+  color: transparent;
+  background: linear-gradient(90deg, #B55FDE, #5E2EF4, #EA6987, #F6AEBC, #85B4E2, #E0B89F, #B55FDE);
   background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   animation: header-text-pan 5.8s ease-in-out infinite alternate;
 }
-
-/* Halo: duplicamos el mismo texto detrás, con blur y el mismo gradient */
 .header-title.thinking::after{
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  background: linear-gradient(
-    90deg,
-    #B55FDE, #5E2EF4, #EA6987, #F6AEBC, #85B4E2, #E0B89F, #B55FDE
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-
-  /* El “degradado alrededor”: blur + leve escala para que salga fuera de las letras */
-  filter: blur(10px) saturate(1.35) brightness(1.06);
-  transform: scale(1.06);
-  opacity: .70;
-  pointer-events: none;
-
-  animation: header-text-pan 5.8s ease-in-out infinite alternate;
+  content: attr(data-text); position: absolute; inset: 0;
+  -webkit-text-fill-color: transparent; color: transparent;
+  background: linear-gradient(90deg, #B55FDE, #5E2EF4, #EA6987, #F6AEBC, #85B4E2, #E0B89F, #B55FDE);
+  background-size: 220% 100%; -webkit-background-clip: text; background-clip: text;
+  filter: blur(10px) saturate(1.35) brightness(1.06); transform: scale(1.06);
+  opacity: .70; pointer-events: none; animation: header-text-pan 5.8s ease-in-out infinite alternate;
   transition: opacity .3s ease;
 }
-
-/* Suaviza todavía más la entrada/salida del halo cuando se activa/desactiva */
-.header-title.thinking:not(.is-active)::after{
-  opacity: 0;
-}
-
-/* Movimiento del gradiente dentro del texto */
-@keyframes header-text-pan{
-  0%   { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-
-/* Responsive afinado para móvil (texto un pelín más grande y glow más suave) */
+.header-title.thinking:not(.is-active)::after{ opacity: 0; }
+@keyframes header-text-pan{ 0%{background-position:0% 50%} 100%{background-position:100% 50%} }
 @media (max-width: 640px){
   .header-status-swap{ height: 1.2rem; min-width: 180px; }
   .header-title{ font-size: .95rem; }
   .header-title.thinking::after{ filter: blur(9px) saturate(1.25) brightness(1.05); }
 }
 
-/* ——— Hover “espectáculo” para chats antiguos (Anteriores) ——— */
-.spectra-bg {
-  pointer-events: none;
-  will-change: transform, opacity, background-position;
-  filter: blur(18px) saturate(1.2);
-  opacity: 0.85;
-  background: linear-gradient(
-    125deg,
-    #5F4E94,
-    #E5D37F,
-    #DF946C,
-    #00000A,
-    #C2736E,
-    #D8CCE0,
-    #5F4E94
-  );
-  background-size: 400% 400%;
-  animation: spectra-shift 8s ease-in-out infinite;
-  mix-blend-mode: screen; /* se integra con el fondo sin tapar texto */
-  border-radius: 28px;
-}
-
-@keyframes spectra-shift {
-  0% { background-position: 0% 50%; transform: translate3d(-2%, 0, 0) scale(1.02) rotate(0.3deg); }
-  50% { background-position: 100% 50%; transform: translate3d(2%, 0, 0) scale(1.05) rotate(-0.2deg); }
-  100% { background-position: 0% 50%; transform: translate3d(-2%, 0, 0) scale(1.02) rotate(0.3deg); }
-}
-
-/* ===== Portada: glow suave detrás del input centrado ===== */
-.landing-glow{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform: translate(-50%,-50%);
-  width:min(900px, 88vw);
-  height:220px;
-  border-radius:9999px;
-  pointer-events:none;
-  background:
-    radial-gradient(120% 80% at 20% 40%, rgba(181,95,222,.35), transparent 60%),
-    radial-gradient(120% 80% at 80% 60%, rgba(234,105,135,.30), transparent 62%),
-    radial-gradient(140% 90% at 50% 50%, rgba(133,180,226,.28), transparent 65%);
-  filter: blur(28px) saturate(1.2);
-  animation: landing-float 6.5s ease-in-out infinite alternate;
-  z-index:0;
-}
-@keyframes landing-float{
-  0%   { transform: translate(-50%,-50%) scale(1.00); opacity:.85; }
-  100% { transform: translate(calc(-50% + 6px),calc(-50% - 4px)) scale(1.04); opacity:.95; }
-}
-
-/* ===== Barrido diagonal al arrancar la conversación ===== */
-.sweep-enter{
-  position: fixed;
-  inset: 0;
-  z-index: 40;           /* por encima del input/header */
-  pointer-events: none;  /* solo decorativo */
-  overflow: hidden;
-}
-
-/* Banda principal (multicolor) */
+/* ===== Barrido diagonal (cuando empieza la conversación) ===== */
+.sweep-enter{ position: fixed; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
 .sweep-band{
-  position: absolute;
-  left: -15%;
-  width: 130%;
-  height: 38%;
-  top: 100%;
-  background: linear-gradient(
-    100deg,
-    #5F4E94,
-    #E5D37F,
-    #DF946C,
-    #00000A,
-    #C2736E,
-    #D8CCE0,
-    #5F4E94
-  );
-  background-size: 200% 200%;
-  filter: blur(26px) saturate(1.15) contrast(1.02);
-  opacity: 0.95;
-  transform: translateY(20%) rotate(-2deg);
-  animation:
-    sweep-band-move 950ms cubic-bezier(.22,.61,.36,1) forwards,
-    sweep-band-shift 6s ease-in-out infinite alternate;
+  position: absolute; left: -15%; width: 130%; height: 38%; top: 100%;
+  background: linear-gradient(100deg, #5F4E94, #E5D37F, #DF946C, #00000A, #C2736E, #D8CCE0, #5F4E94);
+  background-size: 200% 200%; filter: blur(26px) saturate(1.15) contrast(1.02);
+  opacity: 0.95; transform: translateY(20%) rotate(-2deg);
+  animation: sweep-band-move 950ms cubic-bezier(.22,.61,.36,1) forwards, sweep-band-shift 6s ease-in-out infinite alternate;
 }
+.sweep-band--trail{ opacity: .55; filter: blur(36px) saturate(1.1); animation-delay: 60ms, 0s; }
+@keyframes sweep-band-move{ 0%{ transform: translateY(20%) rotate(-2deg); } 100%{ transform: translateY(-140%) rotate(1deg); opacity:0; } }
+@keyframes sweep-band-shift{ from {background-position:0% 50%} to {background-position:100% 50%} }
 
-/* Estela retrasada para “volumen” */
-.sweep-band--trail{
-  opacity: .55;
-  filter: blur(36px) saturate(1.1);
-  animation-delay: 60ms, 0s;
-}
-
-@keyframes sweep-band-move{
-  0%   { transform: translateY(20%) rotate(-2deg); }
-  100% { transform: translateY(-140%) rotate(1deg); opacity: 0; }
-}
-@keyframes sweep-band-shift{
-  from { background-position: 0% 50%; }
-  to   { background-position: 100% 50%; }
-}
-
-/* ===== Destello sobre el input mientras viaja al fondo ===== */
+/* ===== Destello sobre el input durante el viaje ===== */
 .input-sweep-sheen{
-  position:absolute;
-  inset:-2px;                 /* que “muerda” el borde redondeado */
-  border-radius: 9999px;
-  pointer-events:none;
-  background: linear-gradient(
-    120deg,
-    rgba(255,255,255,0) 30%,
-    rgba(255,255,255,.65) 48%,
-    rgba(255,255,255,0) 70%
-  );
-  transform: translateX(-120%);
-  animation: input-sheen 820ms ease-out forwards;
-  mix-blend-mode: screen;
-  opacity:.65;
-  filter: blur(1px);
+  position:absolute; inset:-2px; border-radius: 9999px; pointer-events:none;
+  background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,.65) 48%, rgba(255,255,255,0) 70%);
+  transform: translateX(-120%); animation: input-sheen 820ms ease-out forwards;
+  mix-blend-mode: screen; opacity:.65; filter: blur(1px);
 }
 @keyframes input-sheen { to { transform: translateX(120%); opacity:0; } }
 
-/* Oculta el viejo fade superior global (blanco) */
-.top-fade{ display:none !important; }
-
-/* Si todavía existen estilos de fades, apágalos por si acaso */
-.chat-fade-up,
-.chat-fade-down{ display:none !important; }
-
-/* Envoltorio centrado con el MISMO ancho que el input */
+/* ===== Bloque SÓLIDO bajo el input (sin degradados) ===== */
+/* Igual ancho que el input (max-w-4xl + px-4) */
 .mask-wrap{
   position:absolute;
   left:50%;
@@ -731,89 +412,19 @@
   max-width:56rem;   /* = max-w-4xl */
   padding:0 1rem;    /* = px-4 del input */
 }
-
-/* Placa sólida del color del fondo para ocultar mensajes bajo el input */
+/* Color sólido del fondo del chat */
 .chat-mask{
   width:100%;
-  background:#1C1C1C;   /* mismo color que el fondo del chat */
-  box-shadow:none;      /* sin degradados ni sombras */
+  background: var(--lava-bg) !important; /* #1C1C1C */
+  box-shadow:none;
   pointer-events:none;
   border-radius:0;
 }
-
-/* (Opcional) si aún tienes .chat-plate, neutralízala */
+/* Apaga cualquier fade antiguo del input */
 .chat-plate{ display:none !important; }
+.chat-fade-up, .chat-fade-down{ display:none !important; }
 
-/* ❌ Mata cualquier resto del fade blanco superior global */
-.top-fade{ display:none !important; }
-
-/* ========== Fondo global lava/ember (cubre página + sidebar) ========== */
-/* Colores (tu paleta) */
-:root{
-  --lava-bg: #1C1C1C;
-  --lava-a: #F86F27; /* brillo */
-  --lava-b: #B93A19; /* rojo tostado */
-  --lava-c: #BC602D; /* naranja medio */
-  --lava-d: #4E231C; /* sombra cálida */
-}
-
-/* Pinta el fondo base en toda la app */
-html, body { background: var(--lava-bg) !important; }
-
-/* Capa de gradientes suaves (debajo de todo el contenido) */
-body::before{
-  content:"";
-  position: fixed;
-  inset: 0;
-  z-index: -1;                 /* queda detrás de todo */
-  pointer-events: none;
-
-  /* blobs grandes y suaves + base oscura */
-  background:
-    /* blob principal en esquina superior derecha */
-    radial-gradient(72% 60% at 95% 0%,
-      color-mix(in oklab, var(--lava-a) 70%, transparent) 0%,
-      color-mix(in oklab, var(--lava-c) 45%, transparent) 35%,
-      color-mix(in oklab, var(--lava-d) 25%, transparent) 63%,
-      transparent 100%
-    ),
-    /* refuerzo cálido medio-izquierda */
-    radial-gradient(50% 40% at 20% 60%,
-      color-mix(in oklab, var(--lava-b) 40%, transparent) 0%,
-      transparent 70%
-    ),
-    /* halo inferior */
-    radial-gradient(65% 55% at 50% 110%,
-      color-mix(in oklab, var(--lava-c) 25%, transparent) 0%,
-      transparent 80%
-    ),
-    /* base sólida */
-    linear-gradient(var(--lava-bg), var(--lava-bg));
-  filter: saturate(1.05) contrast(1.02);
-}
-
-/* Si tu sidebar tiene un color sólido, hazlo transparente para que se vea el fondo.
-   Añade la clase .app-sidebar a tu sidebar si quieres controlarlo sin romper nada. */
-.app-sidebar{ background: transparent !important; }
-
-/* ====== Título de bienvenida en BLANCO ====== */
-/* Conserva tamaños/anims, solo cambia relleno a blanco y añade un glow sutil */
-.welcome-poster{
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: initial !important;
-  color: #fff !important;
-  text-shadow:
-    0 1px 0 rgba(255,255,255,.04),
-    0 14px 34px rgba(0,0,0,.55);
-}
-
-/* Oculta la franja blanca superior global */
-.top-fade{ display:none !important; }
-
-/* El wrap que centra los fades ya se posiciona inline en el TSX; aquí
-   solo garantizamos que no capte eventos y que sus hijos ocupen todo su ancho */
+/* Wrap de fades por si acaso */
 .chat-fades-wrap{ pointer-events:none; }
 .chat-fades-wrap .chat-plate,
 .chat-fades-wrap .chat-fade-up,
